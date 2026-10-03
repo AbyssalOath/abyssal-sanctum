@@ -1,0 +1,69 @@
+# Tool catalog: Forensics. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "forensics"
+name = "Forensics"
+summary = "Evidence imaging, filesystem analysis, carving and metadata"
+icon = "edit-find"
+
+[[tool]]
+id = "sleuthkit"
+name = "The Sleuth Kit"
+package = "sleuthkit"
+command = "fls"
+risk = "read-only"
+summary = "Filesystem analysis on images and devices: partitions, files, deleted entries, timelines"
+usage = ["mmls disk.img", "fls -r -o 2048 disk.img", "icat -o 2048 disk.img 1234 > recovered.bin", "fls -r -m / -o 2048 disk.img > body.txt && mactime -b body.txt > timeline.csv"]
+docs = "security/forensic-workflow"
+
+[[tool]]
+id = "ewf"
+name = "libewf (EWF/E01 images)"
+package = "libewf"
+command = "ewfacquire"
+risk = "read-only"
+summary = "Acquire and verify Expert Witness (E01) evidence images"
+note = "Reads the source; the image is written where you choose."
+usage = ["ewfacquire /dev/sdX", "ewfverify image.E01", "ewfinfo image.E01"]
+docs = "security/evidence-preservation"
+
+[[tool]]
+id = "foremost"
+name = "Foremost"
+package = "foremost"
+command = "foremost"
+risk = "read-only"
+summary = "Carve files out of disk images by their headers"
+usage = ["foremost -i disk.img -o /mnt/usb/carved"]
+
+[[tool]]
+id = "exiftool"
+name = "ExifTool"
+package = "perl-image-exiftool"
+command = "exiftool"
+risk = "read-only"
+summary = "Read metadata from documents, images and executables"
+note = "Reading is safe. Options that write tags change the file; never use them on evidence."
+usage = ["exiftool file.jpg", "exiftool -r -csv /mnt/target/Users > metadata.csv"]
+check = ["exiftool", "-ver"]
+
+[[tool]]
+id = "ssdeep"
+name = "ssdeep"
+package = "ssdeep"
+command = "ssdeep"
+risk = "read-only"
+summary = "Fuzzy hashes, to find files that are similar rather than identical"
+usage = ["ssdeep -r /mnt/target > hashes.txt", "ssdeep -m hashes.txt suspicious.bin"]
+check = ["ssdeep", "-V"]
+
+[[tool]]
+id = "binwalk"
+name = "binwalk"
+package = "binwalk"
+command = "binwalk"
+risk = "read-only"
+summary = "Find embedded files and code in binaries and firmware images"
+note = "-e extracts into the current directory."
+usage = ["binwalk firmware.bin", "binwalk -e firmware.bin"]
+check = ["binwalk", "--version"]

@@ -1,0 +1,13 @@
+NAME="Abyssal Sanctum"
+PRETTY_NAME="Abyssal Sanctum v@SANCTUM_VERSION@"
+ID=abyssal-sanctum
+ID_LIKE=arch
+VERSION="v@SANCTUM_VERSION@"
+VERSION_ID=@SANCTUM_VERSION@
+BUILD_ID=@GIT_COMMIT@
+VARIANT="System Recovery Environment"
+VARIANT_ID=recovery
+ANSI_COLOR="38;2;63;169;245"
+HOME_URL="https://github.com/AbyssalOath/abyssal-sanctum"
+DOCUMENTATION_URL="https://github.com/AbyssalOath/abyssal-sanctum/tree/main/docs"
+BUG_REPORT_URL="https://github.com/AbyssalOath/abyssal-sanctum/issues"

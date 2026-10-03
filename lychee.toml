@@ -1,0 +1,8 @@
+# Link check configuration (CI job "docs"). Only links inside the
+# repository are checked: relative file links and #fragments. External
+# sites are not fetched, so CI does not fail when a third-party site is
+# down, and links to the not-yet-public GitHub repository are not checked.
+offline = true
+include_fragments = "full"
+# Regular expressions matched against paths.
+exclude_path = ["(^|/)target/", "(^|/)out/"]

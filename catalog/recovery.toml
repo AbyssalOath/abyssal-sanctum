@@ -1,0 +1,72 @@
+# Tool catalog: Recovery. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "recovery"
+name = "Recovery"
+summary = "Get lost partitions, files and boot entries back"
+icon = "system-software-update"
+
+[[tool]]
+id = "testdisk"
+name = "TestDisk"
+package = "testdisk"
+command = "testdisk"
+risk = "modifies"
+summary = "Find lost partitions and rewrite the partition table; repair boot sectors"
+note = "Analysis is read-only. Nothing is written until you choose Write and confirm."
+usage = ["testdisk /dev/sdX", "testdisk /list"]
+docs = "recovery/filesystems"
+
+[[tool]]
+id = "photorec"
+name = "PhotoRec"
+package = "testdisk"
+command = "photorec"
+risk = "read-only"
+summary = "Recover deleted files by their content, even from damaged filesystems"
+note = "Reads the source; recovered files go to a directory you choose, which must be on another disk."
+usage = ["photorec /dev/sdX", "photorec /log /d /mnt/usb/recovered /dev/sdX"]
+docs = "recovery/filesystems"
+also = ["forensics"]
+
+[[tool]]
+id = "ddrescue"
+name = "GNU ddrescue"
+package = "ddrescue"
+command = "ddrescue"
+risk = "destructive"
+summary = "Copy a failing disk, reading the good areas first and retrying the bad ones"
+note = "The source is only read. The destination is overwritten: check it twice."
+usage = [
+  "ddrescue -n /dev/sdX /mnt/usb/disk.img /mnt/usb/disk.map",
+  "ddrescue -r3 /dev/sdX /mnt/usb/disk.img /mnt/usb/disk.map",
+]
+check = ["ddrescue", "--version"]
+docs = "recovery/backup-and-restore"
+also = ["storage", "forensics"]
+
+[[tool]]
+id = "gpart"
+name = "gpart"
+package = "gpart"
+command = "gpart"
+risk = "read-only"
+summary = "Guess the partitions of a disk whose partition table is lost"
+note = "Scanning is read-only. It writes only with -W."
+usage = ["gpart /dev/sdX"]
+docs = "recovery/filesystems"
+
+[[tool]]
+id = "efibootmgr"
+name = "efibootmgr"
+package = "efibootmgr"
+command = "efibootmgr"
+risk = "modifies"
+summary = "List and repair UEFI boot entries in the firmware"
+usage = [
+  "efibootmgr -v",
+  "efibootmgr --create --disk /dev/sdX --part 1 --label 'Windows Boot Manager' --loader '\\EFI\\Microsoft\\Boot\\bootmgfw.efi'",
+]
+check = ["efibootmgr", "--version"]
+docs = "recovery/windows"
+also = ["windows", "linux"]

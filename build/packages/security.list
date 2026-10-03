@@ -1,0 +1,5 @@
+# Security: malware and rootkit investigation (gap analysis section 5).
+clamav               # Offline malware scanning of mounted disks; databases come from freshclam (D6)
+yara                 # Rule-based file matching; rules are brought by the user (gap analysis 5.2)
+rkhunter             # Rootkit and suspicious-file checks
+unhide               # Hidden process and port detection on a live suspect system

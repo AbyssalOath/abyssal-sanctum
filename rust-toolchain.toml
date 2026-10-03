@@ -1,0 +1,9 @@
+# Pinned so a new Rust release (with new Clippy lints) cannot break CI or
+# local builds without a code change. Matches Abyssal Warden. Update
+# deliberately: bump the version and fix any new lints in the same change.
+#
+# The minimum supported version is `rust-version` in Cargo.toml.
+[toolchain]
+channel = "1.98.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

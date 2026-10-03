@@ -1,0 +1,62 @@
+# Tool catalog: Linux. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "linux"
+name = "Linux"
+summary = "Repair installed Linux systems from the outside"
+icon = "utilities-terminal"
+
+[[tool]]
+id = "arch-chroot"
+name = "arch-chroot"
+package = "arch-install-scripts"
+command = "arch-chroot"
+risk = "modifies"
+summary = "Enter an installed Linux system (any distribution) to repair it with its own tools"
+note = "Mount the root filesystem (and /boot, /boot/efi) under /mnt first."
+usage = ["arch-chroot /mnt"]
+docs = "recovery/linux"
+
+[[tool]]
+id = "grub"
+name = "GRUB"
+package = "grub"
+command = "grub-install"
+risk = "modifies"
+summary = "Reinstall the GRUB boot loader; usually run inside arch-chroot"
+usage = ["grub-install --target=x86_64-efi --efi-directory=/boot/efi", "grub-mkconfig -o /boot/grub/grub.cfg"]
+check = ["grub-install", "--version"]
+docs = "recovery/linux"
+
+[[tool]]
+id = "os-prober"
+name = "os-prober"
+package = "os-prober"
+command = "os-prober"
+risk = "modifies"
+summary = "Find the operating systems installed on this machine"
+note = "It mounts each partition read-only to look inside; a read-only ext4 mount can still replay the journal."
+usage = ["os-prober"]
+docs = "recovery/linux"
+
+[[tool]]
+id = "journalctl"
+name = "journalctl"
+package = "systemd"
+command = "journalctl"
+risk = "read-only"
+summary = "Read the system journal of an installed system without booting it"
+usage = ["journalctl -D /mnt/var/log/journal -b -1 -p err", "journalctl -D /mnt/var/log/journal --list-boots"]
+check = ["journalctl", "--version"]
+docs = "recovery/linux"
+
+[[tool]]
+id = "pacman"
+name = "pacman"
+package = "pacman"
+command = "pacman"
+risk = "modifies"
+summary = "Install extra packages into the live system (from the same snapshot)"
+note = "Installed packages live in RAM and are gone after a reboot."
+usage = ["pacman -Sy", "pacman -S PACKAGE"]
+check = ["pacman", "--version"]

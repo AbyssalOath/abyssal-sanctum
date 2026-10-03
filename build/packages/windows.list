@@ -1,0 +1,3 @@
+# Windows: offline repair and investigation of Windows installations.
+chntpw               # Reset or unlock local accounts in an offline SAM hive
+hivex                # Read Windows registry hives offline (hivexsh)

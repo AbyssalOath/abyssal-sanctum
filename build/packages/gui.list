@@ -1,0 +1,24 @@
+# Graphical environment: Xfce on Xorg, started with startx (ADR-0007).
+xorg-server          # X server; the modesetting driver covers most GPUs
+xorg-xinit           # startx
+xorg-xauth           # X authorisation cookies, used by startx
+xorg-xrandr          # Display layout, and monitor names for setting the background
+xf86-input-libinput  # Keyboard, mouse and touchpad input under X
+mesa                 # OpenGL and GPU acceleration for the X server
+ttf-dejavu           # Readable fonts for the desktop and Firefox
+adwaita-icon-theme   # Icons for menus and applications
+librsvg              # SVG image loading; most menu icons are SVG
+xfwm4                # Xfce window manager
+xfce4-panel          # Panel with the Sanctum menu, task list and clock
+xfce4-session        # Xfce session (startxfce4)
+xfce4-settings       # Display, keyboard and appearance settings
+xfdesktop            # Desktop background
+xfce4-terminal       # Terminal emulator
+thunar               # File manager (without thunar-volman: no automount)
+mousepad             # Graphical text editor
+network-manager-applet # Network icon in the panel and the connection editor
+gparted              # Graphical partition editor
+gsmartcontrol        # Graphical SMART viewer
+wireshark-qt         # Graphical packet analysis
+firefox              # Web browser for documentation, drivers and error messages (D4)
+xdg-utils            # xdg-open, so applications can open links and files

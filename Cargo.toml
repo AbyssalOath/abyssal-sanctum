@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/sanctum-cli"]
+
+[workspace.package]
+# Must match VERSION and the ISO version; CI checks this from Phase 2.
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+repository = "https://github.com/AbyssalOath/abyssal-sanctum"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+expect_used = "warn"
+todo = "warn"
+unimplemented = "warn"
+unwrap_used = "warn"

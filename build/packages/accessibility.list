@@ -1,0 +1,5 @@
+# Accessibility: the speech boot entry and braille displays.
+alsa-utils           # Sound mixer control; the speech entry unmutes the sound card with it
+espeakup             # Speakup screen reader bridge to the espeak-ng speech synthesizer
+brltty               # Braille display support
+livecd-sounds        # Audio cues that tell a blind user the live system has booted

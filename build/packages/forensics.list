@@ -1,0 +1,7 @@
+# Forensics: evidence imaging and analysis, read-only by default.
+sleuthkit            # Filesystem analysis, deleted files and timelines on images and devices
+libewf               # Expert Witness (E01) image acquisition and verification
+foremost             # File carving from disk images
+perl-image-exiftool  # Metadata from documents, images and executables
+ssdeep               # Fuzzy hashing, to find similar files
+binwalk              # Embedded files and code in binaries and firmware

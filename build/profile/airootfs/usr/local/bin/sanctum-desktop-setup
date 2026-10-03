@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# sanctum-desktop-setup: write Xfce's desktop settings (background on every
+# monitor, no desktop icons). Run from ~/.xinitrc after X starts and before
+# Xfce does.
+#
+# xfdesktop keeps one background setting per monitor connector name
+# (Virtual-1, eDP-1, HDMI-A-1...), which is only known once X is running.
+# It reads the settings at start-up and does not apply later changes to new
+# monitor entries, so they are written to the channel file beforehand.
+
+set -uo pipefail
+
+image=/usr/share/backgrounds/abyssal-sanctum/portal-of-midnight.png
+channel_dir="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml"
+channel="${channel_dir}/xfce4-desktop.xml"
+
+mkdir -p -- "${channel_dir}"
+mapfile -t monitors < <(xrandr --listmonitors 2>/dev/null | awk 'NR > 1 { print $NF }')
+
+{
+	printf '<?xml version="1.0" encoding="UTF-8"?>\n'
+	printf '<!-- Written by sanctum-desktop-setup at each startx. -->\n'
+	printf '<channel name="xfce4-desktop" version="1.0">\n'
+	printf '  <property name="desktop-icons" type="empty">\n'
+	printf '    <property name="style" type="int" value="0"/>\n'
+	printf '  </property>\n'
+	if [[ -r ${image} ]] && ((${#monitors[@]})); then
+		printf '  <property name="backdrop" type="empty">\n'
+		# One background for all workspaces, taken from workspace 0.
+		printf '    <property name="single-workspace-mode" type="bool" value="true"/>\n'
+		printf '    <property name="single-workspace-number" type="int" value="0"/>\n'
+		printf '    <property name="screen0" type="empty">\n'
+		for monitor in "${monitors[@]}"; do
+			printf '      <property name="monitor%s" type="empty">\n' "${monitor}"
+			printf '        <property name="workspace0" type="empty">\n'
+			printf '          <property name="last-image" type="string" value="%s"/>\n' "${image}"
+			# 5: zoomed (fill the screen, keep the aspect ratio).
+			printf '          <property name="image-style" type="int" value="5"/>\n'
+			printf '        </property>\n'
+			printf '      </property>\n'
+		done
+		printf '    </property>\n'
+		printf '  </property>\n'
+	fi
+	printf '</channel>\n'
+} >"${channel}"

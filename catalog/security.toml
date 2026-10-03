@@ -1,0 +1,96 @@
+# Tool catalog: Security. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "security"
+name = "Security"
+summary = "Malware scanning, rootkit checks, hashing and the firewall"
+icon = "security-high"
+
+[[tool]]
+id = "clamscan"
+name = "ClamAV scanner"
+package = "clamav"
+command = "clamscan"
+risk = "read-only"
+summary = "Scan a mounted disk for known malware"
+note = "Needs signature databases: run freshclam while online first. Never use --remove; use --move or just report."
+usage = ["clamscan -r -i --log=/mnt/usb/clamscan.log /mnt/target", "clamscan -r -i --move=/mnt/usb/quarantine /mnt/target"]
+check = ["clamscan", "--version"]
+docs = "security/offline-malware-scanning"
+
+[[tool]]
+id = "freshclam"
+name = "ClamAV database update"
+package = "clamav"
+command = "freshclam"
+risk = "modifies"
+summary = "Download the current ClamAV signature databases (needs Internet)"
+note = "Databases live in RAM and are lost at reboot; copy /var/lib/clamav to a USB stick to reuse them offline."
+usage = ["freshclam", "cp /mnt/usb/clamav/*.c?d /var/lib/clamav/"]
+docs = "security/offline-malware-scanning"
+
+[[tool]]
+id = "yara"
+name = "YARA"
+package = "yara"
+command = "yara"
+risk = "read-only"
+summary = "Match files against YARA rules"
+note = "Sanctum ships no rules. Bring your own rule files."
+usage = ["yara -r rules.yar /mnt/target", "yara -r -s rules.yar suspicious.exe"]
+check = ["yara", "--version"]
+docs = "security/yara-scanning"
+
+[[tool]]
+id = "rkhunter"
+name = "Rootkit Hunter"
+package = "rkhunter"
+command = "rkhunter"
+risk = "read-only"
+summary = "Rootkit and suspicious-file checks"
+note = "By default it checks the running system, which is Sanctum itself. Read the rootkit guide before using it on a target."
+usage = ["rkhunter --check --sk --rwo"]
+check = ["rkhunter", "--version"]
+docs = "security/rootkit-investigation"
+
+[[tool]]
+id = "unhide"
+name = "unhide"
+package = "unhide"
+command = "unhide"
+risk = "read-only"
+summary = "Find hidden processes and ports on the running system"
+note = "Only meaningful on a live, suspect system, not offline."
+usage = ["unhide quick", "unhide-tcp"]
+docs = "security/rootkit-investigation"
+
+[[tool]]
+id = "hashes"
+name = "File hashes"
+package = "coreutils"
+command = "sha256sum"
+risk = "read-only"
+summary = "SHA-256 and other hashes, for verifying files and recording evidence"
+usage = ["sha256sum /dev/sdX", "find /mnt/target -type f -exec sha256sum {} + > /mnt/usb/hashes.txt", "sha256sum -c hashes.txt"]
+check = ["sha256sum", "--version"]
+docs = "security/evidence-preservation"
+also = ["forensics"]
+
+[[tool]]
+id = "firewall"
+name = "Firewall (nftables)"
+package = "nftables"
+command = "nft"
+risk = "modifies"
+summary = "Show the firewall, open or close a port"
+usage = ["nft list ruleset", "nft add element inet sanctum tcp_open '{ 22 }'", "nft delete element inet sanctum tcp_open '{ 22 }'"]
+check = ["nft", "--version"]
+
+[[tool]]
+id = "sanctum-selftest"
+name = "Sanctum self-test"
+package = "sanctum"
+command = "sanctum-selftest"
+risk = "read-only"
+summary = "Check that Sanctum's safe defaults are in effect"
+usage = ["sanctum selftest"]

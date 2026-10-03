@@ -1,0 +1,207 @@
+# Tool catalog: Storage. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "storage"
+name = "Storage"
+summary = "Disks, partitions, filesystems, RAID, LVM, encryption and imaging"
+icon = "drive-harddisk"
+
+[[tool]]
+id = "sanctum-disks"
+name = "Disk overview"
+package = "sanctum"
+command = "sanctum"
+risk = "read-only"
+summary = "Every disk with its partitions, filesystems, encryption, RAID/LVM membership and SMART health"
+usage = ["sanctum disks", "sanctum disks --no-smart"]
+docs = "recovery/disk-diagnostics"
+also = ["hardware"]
+
+[[tool]]
+id = "lsblk"
+name = "lsblk"
+package = "util-linux"
+command = "lsblk"
+risk = "read-only"
+summary = "List block devices, filesystems, labels and mount points"
+usage = ["lsblk -f", "lsblk -o NAME,SIZE,TYPE,FSTYPE,MODEL,SERIAL"]
+check = ["lsblk", "--version"]
+
+[[tool]]
+id = "gparted"
+name = "GParted"
+package = "gparted"
+command = "gparted"
+gui = true
+risk = "destructive"
+summary = "Graphical partition editor: create, resize, move, check and copy partitions"
+note = "Changes are queued and only applied when you click Apply."
+icon = "gparted"
+
+[[tool]]
+id = "gdisk"
+name = "gdisk"
+package = "gptfdisk"
+command = "gdisk"
+risk = "destructive"
+summary = "GPT partition editor; can rebuild a damaged GPT from its backup copy"
+note = "Nothing is written until you use the w command."
+usage = ["gdisk -l /dev/sdX", "gdisk /dev/sdX"]
+
+[[tool]]
+id = "parted"
+name = "GNU Parted"
+package = "parted"
+command = "parted"
+risk = "destructive"
+summary = "Partition editor for MBR and GPT disks"
+note = "Most commands take effect immediately."
+usage = ["parted /dev/sdX print", "parted -l"]
+check = ["parted", "--version"]
+
+[[tool]]
+id = "smartctl"
+name = "smartctl"
+package = "smartmontools"
+command = "smartctl"
+risk = "read-only"
+summary = "SMART health, error logs and self-tests for SATA, SAS and NVMe disks"
+usage = ["smartctl -a /dev/sdX", "smartctl -t short /dev/sdX", "smartctl -l selftest /dev/sdX"]
+check = ["smartctl", "--version"]
+docs = "recovery/disk-diagnostics"
+also = ["hardware"]
+
+[[tool]]
+id = "gsmartcontrol"
+name = "GSmartControl"
+package = "gsmartcontrol"
+command = "gsmartcontrol"
+gui = true
+risk = "read-only"
+summary = "Graphical SMART health viewer and self-test runner"
+icon = "gsmartcontrol"
+docs = "recovery/disk-diagnostics"
+also = ["hardware"]
+
+[[tool]]
+id = "nvme"
+name = "nvme-cli"
+package = "nvme-cli"
+command = "nvme"
+risk = "destructive"
+summary = "NVMe health logs, error logs and namespaces"
+note = "smart-log and error-log are read-only; format and sanitize erase the drive."
+usage = ["nvme list", "nvme smart-log /dev/nvme0", "nvme error-log /dev/nvme0"]
+check = ["nvme", "version"]
+docs = "recovery/disk-diagnostics"
+also = ["hardware"]
+
+[[tool]]
+id = "hdparm"
+name = "hdparm"
+package = "hdparm"
+command = "hdparm"
+risk = "destructive"
+summary = "ATA disk identity, settings and read speed"
+note = "-I and -t are read-only; the security-erase options wipe the disk."
+usage = ["hdparm -I /dev/sdX", "hdparm -t /dev/sdX"]
+check = ["hdparm", "-V"]
+also = ["hardware"]
+
+[[tool]]
+id = "mdadm"
+name = "mdadm"
+package = "mdadm"
+command = "mdadm"
+risk = "destructive"
+summary = "Inspect and assemble Linux software RAID arrays"
+note = "Sanctum never assembles arrays by itself. Assembling a degraded array can start a resync, which writes to the disks."
+usage = ["mdadm --examine /dev/sdX1", "mdadm --assemble --scan --readonly", "cat /proc/mdstat"]
+check = ["mdadm", "--version"]
+docs = "recovery/filesystems"
+
+[[tool]]
+id = "lvm"
+name = "LVM"
+package = "lvm2"
+command = "lvm"
+risk = "destructive"
+summary = "Inspect and activate LVM volume groups and logical volumes"
+note = "Sanctum never activates volumes by itself."
+usage = ["pvs", "vgs", "lvs", "vgchange -ay VGNAME"]
+check = ["lvm", "version"]
+docs = "recovery/filesystems"
+
+[[tool]]
+id = "cryptsetup"
+name = "cryptsetup"
+package = "cryptsetup"
+command = "cryptsetup"
+risk = "destructive"
+summary = "Unlock LUKS and BitLocker volumes; inspect their headers"
+note = "open and luksDump do not change the volume; luksFormat destroys it."
+usage = [
+  "cryptsetup luksDump /dev/sdX2",
+  "cryptsetup open --readonly /dev/sdX2 data",
+  "cryptsetup open --type bitlk --readonly /dev/sdX3 windows",
+]
+check = ["cryptsetup", "--version"]
+docs = "recovery/filesystems"
+also = ["windows"]
+
+[[tool]]
+id = "fsck-tools"
+name = "Filesystem check and repair"
+package = "e2fsprogs"
+command = "e2fsck"
+risk = "modifies"
+summary = "e2fsck, xfs_repair, btrfs check, fsck.fat, fsck.exfat, fsck.f2fs"
+note = "Run with -n (or btrfs check without --repair) first: that only reports. Repairs change the filesystem and can lose data; image a failing disk first."
+usage = ["e2fsck -fn /dev/sdX2", "xfs_repair -n /dev/sdX2", "btrfs check /dev/sdX2", "fsck.fat -n /dev/sdX1"]
+check = ["e2fsck", "-V"]
+docs = "recovery/filesystems"
+also = ["linux"]
+
+[[tool]]
+id = "partclone"
+name = "Partclone"
+package = "partclone"
+command = "partclone.ext4"
+risk = "destructive"
+summary = "Back up and restore only the used blocks of a filesystem"
+note = "Backups read the source; a restore overwrites the target partition."
+usage = ["partclone.ext4 -c -s /dev/sdX2 -o /mnt/usb/root.img", "partclone.ext4 -r -s /mnt/usb/root.img -o /dev/sdX2"]
+docs = "recovery/backup-and-restore"
+
+[[tool]]
+id = "fsarchiver"
+name = "FSArchiver"
+package = "fsarchiver"
+command = "fsarchiver"
+risk = "destructive"
+summary = "File-level filesystem backups that can be restored to a different-sized partition"
+note = "restfs overwrites the target partition."
+usage = ["fsarchiver savefs /mnt/usb/root.fsa /dev/sdX2", "fsarchiver archinfo /mnt/usb/root.fsa"]
+docs = "recovery/backup-and-restore"
+
+[[tool]]
+id = "clonezilla"
+name = "Clonezilla"
+package = "clonezilla"
+command = "clonezilla"
+risk = "destructive"
+summary = "Guided disk and partition cloning and imaging"
+note = "Restore and disk-to-disk modes overwrite the target. Read every confirmation."
+usage = ["clonezilla"]
+docs = "recovery/backup-and-restore"
+
+[[tool]]
+id = "rsync"
+name = "rsync"
+package = "rsync"
+command = "rsync"
+risk = "modifies"
+summary = "Copy files and directories, with resume and verification"
+usage = ["rsync -aHAX --info=progress2 /mnt/source/ /mnt/usb/backup/"]
+check = ["rsync", "--version"]
+docs = "recovery/backup-and-restore"

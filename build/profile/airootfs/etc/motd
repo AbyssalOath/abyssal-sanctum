@@ -1,0 +1,17 @@
+
+  [1;38;2;63;169;245mAbyssal Sanctum v@SANCTUM_VERSION@[0m
+  Arch Linux-based System Recovery Environment
+  [38;2;150;160;175mA safe environment you boot into for repairs.[0m
+
+  Nothing on this computer's disks is mounted, repaired or changed unless
+  you do it. RAID arrays and LVM volumes are not activated automatically.
+
+  Tools     sanctum            menu of every tool, by category, with risks
+            sanctum disks      read-only overview of disks and SMART health
+            sanctum docs       guides (also in Firefox on the desktop)
+  Desktop   startx
+  Network   Wired DHCP connects automatically. Wi-Fi and settings: nmtui
+  RAID/LVM  mdadm --assemble --scan    vgchange -ay    (only when you choose)
+  SSH       Off and firewalled. To allow remote logins: sanctum ssh enable
+  Check     sanctum selftest   confirms the safe defaults are in effect
+

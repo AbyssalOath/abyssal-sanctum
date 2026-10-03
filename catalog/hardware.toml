@@ -1,0 +1,109 @@
+# Tool catalog: Hardware. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "hardware"
+name = "Hardware"
+summary = "Identify hardware and tell hardware faults from software faults"
+icon = "computer"
+
+[[tool]]
+id = "inxi"
+name = "inxi"
+package = "inxi"
+command = "inxi"
+risk = "read-only"
+summary = "One-screen system summary: CPU, RAM, graphics, disks, network, sensors"
+usage = ["inxi -Fxz", "inxi -Fxxxz"]
+check = ["inxi", "--version"]
+docs = "recovery/disk-diagnostics"
+
+[[tool]]
+id = "lshw"
+name = "lshw"
+package = "lshw"
+command = "lshw"
+risk = "read-only"
+summary = "Detailed hardware inventory"
+usage = ["lshw -short", "lshw -class disk -class storage"]
+check = ["lshw", "-version"]
+
+[[tool]]
+id = "hwinfo"
+name = "hwinfo"
+package = "hwinfo"
+command = "hwinfo"
+risk = "read-only"
+summary = "Hardware probe with driver and module information"
+usage = ["hwinfo --short", "hwinfo --disk"]
+check = ["hwinfo", "--version"]
+
+[[tool]]
+id = "dmidecode"
+name = "dmidecode"
+package = "dmidecode"
+command = "dmidecode"
+risk = "read-only"
+summary = "Firmware information: model, serial number, BIOS version, memory slots"
+usage = ["dmidecode -t system", "dmidecode -t bios", "dmidecode -t memory"]
+check = ["dmidecode", "--version"]
+
+[[tool]]
+id = "lspci"
+name = "lspci"
+package = "pciutils"
+command = "lspci"
+risk = "read-only"
+summary = "PCI and PCIe devices and the drivers bound to them"
+usage = ["lspci -nnk", "lspci -vv -s 00:1f.2"]
+check = ["lspci", "--version"]
+
+[[tool]]
+id = "lsusb"
+name = "lsusb"
+package = "usbutils"
+command = "lsusb"
+risk = "read-only"
+summary = "USB devices and their topology"
+usage = ["lsusb", "lsusb -t"]
+check = ["lsusb", "--version"]
+
+[[tool]]
+id = "sensors"
+name = "lm_sensors"
+package = "lm_sensors"
+command = "sensors"
+risk = "read-only"
+summary = "Temperatures, fan speeds and voltages"
+usage = ["sensors", "watch -n 2 sensors"]
+check = ["sensors", "-v"]
+
+[[tool]]
+id = "stress-ng"
+name = "stress-ng"
+package = "stress-ng"
+command = "stress-ng"
+risk = "read-only"
+summary = "Load the CPU and RAM to reproduce crashes and overheating"
+note = "Watch temperatures with sensors while it runs. Disk stressors write temporary files in the current directory."
+usage = ["stress-ng --cpu 0 --timeout 10m --metrics-brief", "stress-ng --vm 2 --vm-bytes 75% --timeout 10m"]
+check = ["stress-ng", "--version"]
+
+[[tool]]
+id = "memtester"
+name = "memtester"
+package = "memtester"
+command = "memtester"
+risk = "read-only"
+summary = "Test RAM from the running system"
+note = "Memtest86+ in the boot menu tests nearly all RAM and is more thorough."
+usage = ["memtester 2G 1"]
+
+[[tool]]
+id = "tpm2"
+name = "TPM tools"
+package = "tpm2-tools"
+command = "tpm2_getcap"
+risk = "read-only"
+summary = "Inspect the TPM, for example when diagnosing BitLocker or measured-boot problems"
+usage = ["tpm2_getcap properties-fixed", "tpm2_pcrread"]
+also = ["windows"]

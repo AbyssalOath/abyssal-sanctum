@@ -1,0 +1,17 @@
+# Markdown lint configuration (CI job "docs"). markdownlint defaults apply,
+# except:
+config:
+  # One list marker everywhere.
+  MD004:
+    style: dash
+  # Prose is wrapped by hand; tables and long links cannot be.
+  MD013: false
+  # CHANGELOG.md repeats "Added", "Changed" and "Removed" for each version.
+  MD024:
+    siblings_only: true
+
+globs:
+  - "**/*.md"
+ignores:
+  - "target/**"
+  - "out/**"

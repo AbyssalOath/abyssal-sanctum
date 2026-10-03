@@ -1,0 +1,15 @@
+# Base system, kernel, firmware and boot. Format (ADR-0003): one package per
+# line, followed by "# reason". Checked by scripts/ci/check-package-lists.sh.
+base                 # Arch base system: systemd, coreutils, pacman
+linux-hardened       # Kernel (ADR-0004)
+linux-firmware       # Firmware for common network, storage and graphics hardware
+linux-firmware-marvell # Marvell Wi-Fi and Ethernet firmware (Surface devices, some laptops); not in linux-firmware
+sof-firmware         # Audio DSP firmware on modern laptops; the speech boot entry needs working sound
+amd-ucode            # AMD CPU microcode, loaded early to fix CPU errata
+intel-ucode          # Intel CPU microcode, loaded early to fix CPU errata
+mkinitcpio           # Builds the initramfs
+mkinitcpio-archiso   # archiso initramfs hooks that find and mount the live image
+syslinux             # BIOS boot loader, HDT hardware detection and memdisk support
+edk2-shell           # UEFI shell boot entry: inspect firmware, devices and EFI variables without an OS
+memtest86+           # RAM test from the BIOS boot menu
+memtest86+-efi       # RAM test from the UEFI boot menu

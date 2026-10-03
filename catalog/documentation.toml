@@ -1,0 +1,37 @@
+# Tool catalog: Documentation. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "documentation"
+name = "Documentation"
+summary = "Guides for recovery, security and using Sanctum, readable offline"
+icon = "help-browser"
+
+[[tool]]
+id = "sanctum-docs"
+name = "Sanctum guides (terminal)"
+package = "sanctum"
+command = "sanctum"
+risk = "read-only"
+summary = "List and read the Sanctum guides in the terminal"
+usage = ["sanctum docs", "sanctum docs recovery/linux"]
+
+[[tool]]
+id = "docs-browser"
+name = "Sanctum guides (browser)"
+package = "firefox"
+command = "firefox"
+exec = "firefox /usr/share/doc/abyssal-sanctum/html/index.html"
+gui = true
+risk = "read-only"
+summary = "The Sanctum guides as web pages, offline"
+icon = "help-browser"
+
+[[tool]]
+id = "man"
+name = "Manual pages"
+package = "man-db"
+command = "man"
+risk = "read-only"
+summary = "Reference manuals for every installed command"
+usage = ["man smartctl", "man -k partition"]
+check = ["man", "--version"]

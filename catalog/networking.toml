@@ -1,0 +1,175 @@
+# Tool catalog: Networking. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "networking"
+name = "Networking"
+summary = "Connect, troubleshoot, capture traffic and allow remote access"
+icon = "network-wired"
+
+[[tool]]
+id = "nmtui"
+name = "Network settings (nmtui)"
+package = "networkmanager"
+command = "nmtui"
+risk = "modifies"
+summary = "Connect to Wi-Fi, set static addresses, VLANs and other connections"
+usage = ["nmtui", "nmcli device wifi list", "nmcli device wifi connect SSID --ask"]
+check = ["nmcli", "--version"]
+docs = "getting-started/navigation"
+
+[[tool]]
+id = "nm-connection-editor"
+name = "Network Connections"
+package = "network-manager-applet"
+command = "nm-connection-editor"
+gui = true
+risk = "modifies"
+summary = "Graphical editor for network connections"
+icon = "preferences-system-network"
+
+[[tool]]
+id = "ip"
+name = "ip"
+package = "iproute2"
+command = "ip"
+risk = "read-only"
+summary = "Interfaces, addresses, routes and neighbours"
+usage = ["ip -br addr", "ip route", "ip neigh"]
+check = ["ip", "-V"]
+
+[[tool]]
+id = "ping"
+name = "ping"
+package = "iputils"
+command = "ping"
+risk = "read-only"
+summary = "Test reachability"
+usage = ["ping -c 4 1.1.1.1", "ping -c 4 archlinux.org"]
+check = ["ping", "-V"]
+
+[[tool]]
+id = "mtr"
+name = "mtr"
+package = "mtr"
+command = "mtr"
+risk = "read-only"
+summary = "Traceroute and ping combined: find where packets are lost"
+usage = ["mtr -rwc 50 archlinux.org"]
+check = ["mtr", "--version"]
+
+[[tool]]
+id = "dig"
+name = "dig"
+package = "bind"
+command = "dig"
+risk = "read-only"
+summary = "DNS queries, for troubleshooting name resolution"
+usage = ["dig example.com", "dig @1.1.1.1 example.com AAAA", "resolvectl status"]
+check = ["dig", "-v"]
+
+[[tool]]
+id = "iperf3"
+name = "iperf3"
+package = "iperf3"
+command = "iperf3"
+risk = "read-only"
+summary = "Measure network throughput between two machines"
+note = "Server mode needs its port opened: nft add element inet sanctum tcp_open '{ 5201 }'"
+usage = ["iperf3 -c SERVER", "iperf3 -s"]
+check = ["iperf3", "--version"]
+
+[[tool]]
+id = "tcpdump"
+name = "tcpdump"
+package = "tcpdump"
+command = "tcpdump"
+risk = "read-only"
+summary = "Capture packets on the command line"
+usage = ["tcpdump -i any -n", "tcpdump -i eth0 -w /mnt/usb/capture.pcap"]
+check = ["tcpdump", "--version"]
+also = ["security"]
+
+[[tool]]
+id = "tshark"
+name = "TShark"
+package = "wireshark-cli"
+command = "tshark"
+risk = "read-only"
+summary = "Wireshark's command-line packet capture and analysis"
+usage = ["tshark -i any", "tshark -r capture.pcap -Y dns"]
+check = ["tshark", "--version"]
+also = ["security"]
+
+[[tool]]
+id = "wireshark"
+name = "Wireshark"
+package = "wireshark-qt"
+command = "wireshark"
+gui = true
+risk = "read-only"
+summary = "Graphical packet capture and protocol analysis"
+icon = "org.wireshark.Wireshark"
+also = ["security"]
+
+[[tool]]
+id = "nmap"
+name = "Nmap"
+package = "nmap"
+command = "nmap"
+risk = "read-only"
+summary = "Discover hosts and open ports on the local network"
+note = "Only scan networks you are authorised to scan."
+usage = ["nmap -sn 192.168.1.0/24", "nmap -sV 192.168.1.10"]
+check = ["nmap", "--version"]
+
+[[tool]]
+id = "ssh"
+name = "SSH client"
+package = "openssh"
+command = "ssh"
+risk = "read-only"
+summary = "Log in to and copy files from other machines (ssh, scp, sftp)"
+usage = ["ssh user@host", "scp /mnt/recovered/file user@host:"]
+check = ["ssh", "-V"]
+
+[[tool]]
+id = "sanctum-ssh"
+name = "Remote access to Sanctum"
+package = "sanctum"
+command = "sanctum"
+risk = "modifies"
+summary = "Turn on SSH so someone can log in to this machine; turn it off again"
+note = "Sets a root password or an authorized key, starts sshd and opens port 22."
+usage = ["sanctum ssh enable", "sanctum ssh enable --key /mnt/usb/id_ed25519.pub", "sanctum ssh status", "sanctum ssh disable"]
+docs = "getting-started/navigation"
+
+[[tool]]
+id = "iw"
+name = "iw"
+package = "iw"
+command = "iw"
+risk = "read-only"
+summary = "Wi-Fi interfaces, links, scans and regulatory domain"
+usage = ["iw dev", "iw dev wlan0 link", "iw reg get"]
+check = ["iw", "--version"]
+
+[[tool]]
+id = "ethtool"
+name = "ethtool"
+package = "ethtool"
+command = "ethtool"
+risk = "read-only"
+summary = "Ethernet link speed, driver and error counters"
+usage = ["ethtool eth0", "ethtool -S eth0", "ethtool -i eth0"]
+check = ["ethtool", "--version"]
+
+[[tool]]
+id = "firefox"
+name = "Firefox"
+package = "firefox"
+command = "firefox"
+gui = true
+risk = "read-only"
+summary = "Web browser, for drivers, documentation and error messages"
+icon = "firefox"
+check = ["firefox", "--version"]

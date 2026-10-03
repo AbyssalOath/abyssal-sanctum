@@ -1,0 +1,11 @@
+# Hardware identification and diagnostics.
+pciutils             # lspci: PCI and PCIe devices and drivers
+usbutils             # lsusb: USB devices
+dmidecode            # Firmware (SMBIOS) information: model, serial, BIOS version, RAM slots
+tpm2-tools           # TPM state, for diagnosing BitLocker and measured-boot problems
+inxi                 # One-screen system summary, the quickest hardware overview
+lshw                 # Detailed hardware inventory
+hwinfo               # Hardware probe with driver and module details
+lm_sensors           # Temperatures, fans and voltages, for overheating diagnosis
+stress-ng            # CPU and memory load, to reproduce crashes and overheating
+memtester            # RAM test from the running system (Memtest86+ in the boot menu is more thorough)

@@ -1,0 +1,34 @@
+# Disks, filesystems, partitions, imaging and boot repair.
+arch-install-scripts # arch-chroot, for repairing an installed Linux system from inside
+cryptsetup           # Unlock LUKS and BitLocker volumes
+lvm2                 # LVM inspection and activation (never automatic, ADR-0006)
+mdadm                # Software RAID inspection and assembly (never automatic, ADR-0006)
+btrfs-progs          # Btrfs inspection and repair
+dosfstools           # FAT and EFI system partition check and repair
+e2fsprogs            # ext2/3/4 inspection and repair
+exfatprogs           # exFAT check and repair
+f2fs-tools           # F2FS check and repair
+ntfsprogs            # NTFS inspection tools (ntfsinfo, ntfsls, ntfsclone)
+xfsprogs             # XFS inspection and repair
+udftools             # UDF (optical media and some USB drives)
+squashfs-tools       # Inspect other live media and squashfs images
+gptfdisk             # GPT partition tables (gdisk, sgdisk), including backup-header recovery
+parted               # Partition editing for MBR and GPT
+gpart                # Guesses a lost partition table by scanning the disk
+hdparm               # ATA disk information and settings
+sdparm               # SCSI/SAS disk information and settings
+smartmontools        # SMART health of SATA, SAS and NVMe disks
+nvme-cli             # NVMe health, logs and namespaces
+lsscsi               # List SCSI, SATA and USB storage devices
+sg3_utils            # Low-level SCSI commands for diagnosing disks and enclosures
+mmc-utils            # eMMC health and settings (common in cheap laptops)
+ddrescue             # Image failing disks, reading good areas first
+testdisk             # Recover partitions (testdisk) and deleted files (photorec)
+partclone            # Back up and restore used blocks of a filesystem
+fsarchiver           # File-level filesystem backup and restore
+clonezilla           # Guided disk and partition cloning (uses partclone)
+efibootmgr           # Inspect and repair UEFI boot entries
+grub                 # Reinstall the GRUB boot loader on a broken Linux system
+rsync                # Copy and back up files with verification
+ntfs-3g              # NTFS mounting that refuses read-write on hibernated (Fast Startup) volumes
+os-prober            # Find installed operating systems when rebuilding boot menus

@@ -1,0 +1,62 @@
+# Tool catalog: Windows. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "windows"
+name = "Windows"
+summary = "Offline access to Windows disks, registry and boot files"
+icon = "computer"
+
+[[tool]]
+id = "ntfs-3g"
+name = "NTFS-3G"
+package = "ntfs-3g"
+command = "ntfs-3g"
+risk = "modifies"
+summary = "Mount NTFS volumes; refuses to mount hibernated (Fast Startup) volumes read-write"
+note = "Mount read-only unless you must write. Writing to a hibernated Windows volume loses data."
+usage = ["mount -t ntfs-3g -o ro /dev/sdX3 /mnt/windows", "ntfs-3g -o ro /dev/sdX3 /mnt/windows"]
+docs = "recovery/windows"
+
+[[tool]]
+id = "ntfsinfo"
+name = "ntfsinfo"
+package = "ntfsprogs"
+command = "ntfsinfo"
+risk = "read-only"
+summary = "Show NTFS volume information without mounting"
+usage = ["ntfsinfo -m /dev/sdX3"]
+docs = "recovery/windows"
+
+[[tool]]
+id = "ntfsfix"
+name = "ntfsfix"
+package = "ntfsprogs"
+command = "ntfsfix"
+risk = "modifies"
+summary = "Clear the NTFS dirty flag and reset the journal"
+note = "This is not a repair. It only makes Windows run chkdsk at its next boot. Use chkdsk from Windows RE for real repairs."
+usage = ["ntfsfix -n /dev/sdX3"]
+docs = "recovery/windows"
+
+[[tool]]
+id = "chntpw"
+name = "chntpw"
+package = "chntpw"
+command = "chntpw"
+risk = "modifies"
+summary = "Reset or unlock local Windows accounts in an offline SAM hive"
+note = "Local accounts only, not Microsoft accounts. Back up the SAM file first. Will not work on a locked BitLocker volume."
+usage = ["chntpw -l /mnt/windows/Windows/System32/config/SAM", "chntpw -u USER /mnt/windows/Windows/System32/config/SAM"]
+docs = "recovery/windows"
+
+[[tool]]
+id = "hivexsh"
+name = "hivexsh"
+package = "hivex"
+command = "hivexsh"
+risk = "read-only"
+summary = "Browse Windows registry hive files offline"
+note = "Read-only unless started with -w."
+usage = ["hivexsh /mnt/windows/Windows/System32/config/SOFTWARE"]
+docs = "recovery/windows"
+also = ["forensics"]

@@ -1,0 +1,23 @@
+# Shell and console usability.
+zsh                  # Root shell of the live system
+grml-zsh-config      # Completion, prompt and key bindings for zsh
+terminus-font        # Readable console font, including on high-resolution screens
+less                 # Pager
+man-db               # man command
+man-pages            # Linux and POSIX manual pages
+nano                 # Simple editor
+vim                  # Full editor
+tmux                 # Several shells in one console; sessions that survive SSH disconnects
+mc                   # Two-pane console file manager for browsing and copying recovered files
+pv                   # Progress and throughput for long copies and pipes
+diffutils            # diff and cmp, for comparing configuration and recovered files
+foot-terminfo        # Terminal definition, so SSH sessions from foot work correctly
+ghostty-terminfo     # Terminal definition, so SSH sessions from Ghostty work correctly
+kitty-terminfo       # Terminal definition, so SSH sessions from kitty work correctly
+kmscon-terminfo      # Terminal definition, so SSH sessions from kmscon work correctly
+rxvt-unicode-terminfo # Terminal definition, so SSH sessions from urxvt work correctly
+coreutils            # sha256sum and the basic file tools (listed because the catalog refers to it)
+util-linux           # lsblk, mount, fdisk and other disk basics (listed because the catalog refers to it)
+systemd              # journalctl, for reading an installed system's journal (listed because the catalog refers to it)
+pacman               # Installing extra packages into the live system (listed because the catalog refers to it)
+inetutils            # hostname and telnet, for checking services by hand

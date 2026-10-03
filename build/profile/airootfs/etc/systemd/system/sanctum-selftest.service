@@ -1,0 +1,17 @@
+[Unit]
+Description=Abyssal Sanctum self-test
+Documentation=file:///usr/local/bin/sanctum-selftest
+# Runs only when asked for: the sanctum.selftest=1 kernel parameter, or the
+# sanctum.selftest system credential (CI passes it through QEMU's SMBIOS).
+ConditionKernelCommandLine=|sanctum.selftest=1
+ConditionCredential=|sanctum.selftest
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sanctum-selftest --boot
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

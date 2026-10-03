@@ -1,0 +1,18 @@
+# Networking. One network stack for CLI and GUI (gap analysis D7).
+networkmanager       # Ethernet and Wi-Fi with nmcli and nmtui; DHCP on wired links
+openssh              # SSH client; the server is installed but off until explicitly enabled
+nftables             # Firewall: default-deny inbound (ADR-0006)
+iw                   # Wi-Fi interface and link diagnostics
+wireless-regdb       # Wi-Fi regulatory database, needed for correct channels and power
+ethtool              # Ethernet link, driver and offload diagnostics
+bind                 # dig and host, for DNS troubleshooting
+tcpdump              # Packet capture for network investigation
+nmap                 # Network discovery and port scanning of the local network
+bolt                 # Thunderbolt device authorisation, so Thunderbolt docks (and their Ethernet) work
+nfs-utils            # Mount NFS shares to store disk images, backups and evidence
+iproute2             # ip, for interfaces, addresses and routes (listed because the catalog refers to it)
+iputils              # ping (listed because the catalog refers to it)
+mtr                  # Traceroute and ping combined, to find where packets are lost
+iperf3               # Throughput tests between two machines
+wireshark-cli        # tshark, packet analysis on the command line
+cifs-utils           # Mount Windows (SMB) shares to store backups, images and evidence

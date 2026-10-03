@@ -1,0 +1,311 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2317,SC2329 # check_* functions are called through check()
+# sanctum-selftest: check that Abyssal Sanctum's identity and safe defaults
+# are in effect (ADR-0006). Read-only: it inspects the running system and
+# changes nothing.
+#
+# Usage: sanctum-selftest [--boot]
+#
+# Prints one "ok" or "not ok" line per check, then a summary line:
+#   SANCTUM-SELFTEST: PASS
+#   SANCTUM-SELFTEST: FAIL (<n> failed)
+# Exit status: 0 on pass, 1 on failure.
+#
+# --boot is used by sanctum-selftest.service when the system is booted with
+# the sanctum.selftest=1 kernel parameter or the sanctum.selftest system
+# credential (how CI runs it): wait for startup to finish, copy the output
+# to the first serial port, then power off.
+
+set -uo pipefail
+
+boot_mode=0
+case ${1:-} in
+--boot) boot_mode=1 ;;
+"") ;;
+*)
+	printf 'Usage: %s [--boot]\n' "${0##*/}" >&2
+	exit 2
+	;;
+esac
+
+if ((boot_mode)); then
+	# Mirror everything to the serial port, which is how CI reads the result.
+	# A machine without one just loses the copy.
+	exec > >(tee -a /dev/ttyS0 2>/dev/null) 2>&1
+fi
+
+manifest=/usr/share/abyssal-sanctum/manifest.json
+failures=0
+
+ok() { printf 'ok - %s\n' "$1"; }
+not_ok() {
+	printf 'not ok - %s: %s\n' "$1" "$2"
+	failures=$((failures + 1))
+}
+
+# check NAME FUNCTION: run FUNCTION; it prints the reason when it fails.
+check() {
+	local name=$1 reason
+	if reason=$("$2" 2>&1); then
+		ok "${name}"
+	else
+		# One line per check, so the summary stays readable.
+		reason=${reason//$'\n'/; }
+		not_ok "${name}" "${reason:-failed}"
+	fi
+}
+
+manifest_value() {
+	sed -n "s/^  \"$1\": \"\\(.*\\)\",\$/\\1/p" "${manifest}"
+}
+
+check_identity() {
+	local id version_id
+	id=$(. /etc/os-release && printf '%s' "${ID:-}")
+	version_id=$(. /etc/os-release && printf '%s' "${VERSION_ID:-}")
+	[[ ${id} == abyssal-sanctum ]] || {
+		echo "os-release ID is '${id}'"
+		return 1
+	}
+	[[ -r ${manifest} ]] || {
+		echo "${manifest} is missing"
+		return 1
+	}
+	[[ ${version_id} == "$(manifest_value version)" ]] || {
+		echo "os-release VERSION_ID '${version_id}' does not match the manifest"
+		return 1
+	}
+}
+
+check_hostname() {
+	local name
+	name=$(</proc/sys/kernel/hostname)
+	[[ ${name} == sanctum ]] || {
+		echo "hostname is '${name}'"
+		return 1
+	}
+}
+
+check_kernel() {
+	[[ $(uname -r) == *-hardened ]] || {
+		echo "running $(uname -r), expected linux-hardened (ADR-0004)"
+		return 1
+	}
+}
+
+check_no_failed_units() {
+	local failed
+	failed=$(systemctl --failed --no-legend --plain | awk '{print $1}')
+	[[ -z ${failed} ]] || {
+		echo "${failed//$'\n'/ }"
+		return 1
+	}
+}
+
+check_sshd_off() {
+	if systemctl -q is-active sshd.service; then
+		echo "sshd is running"
+		return 1
+	fi
+	if systemctl -q is-enabled sshd.service 2>/dev/null; then
+		echo "sshd is enabled at boot"
+		return 1
+	fi
+}
+
+check_firewall() {
+	local input forward
+	input=$(nft list chain inet sanctum input 2>&1) || {
+		echo "table inet sanctum is not loaded"
+		return 1
+	}
+	forward=$(nft list chain inet sanctum forward 2>&1) || {
+		echo "forward chain is missing"
+		return 1
+	}
+	[[ ${input} == *"policy drop;"* ]] || {
+		echo "input policy is not drop"
+		return 1
+	}
+	[[ ${forward} == *"policy drop;"* ]] || {
+		echo "forward policy is not drop"
+		return 1
+	}
+	if nft list set inet sanctum tcp_open | grep -q 'elements'; then
+		echo "ports are open: $(nft list set inet sanctum tcp_open | grep elements | tr -s ' \t' ' ')"
+		return 1
+	fi
+}
+
+# No service may listen on a non-loopback address. DHCP client sockets
+# (UDP 68 and 546) are clients, not services.
+check_no_listeners() {
+	local listeners
+	listeners=$(ss -Htuln | awk '
+		{ split($5, a, ":"); port = a[length(a)]; addr = substr($5, 1, length($5) - length(port) - 1) }
+		addr ~ /^(127\.|\[::1\])/ { next }
+		$1 == "udp" && (port == 68 || port == 546) { next }
+		{ print $1 " " $5 }')
+	[[ -z ${listeners} ]] || {
+		echo "listening: ${listeners//$'\n'/, }"
+		return 1
+	}
+}
+
+check_no_md_arrays() {
+	local arrays=(/sys/block/md*)
+	[[ ! -e ${arrays[0]} ]] || {
+		echo "active arrays: ${arrays[*]##*/}"
+		return 1
+	}
+}
+
+# Device-mapper devices are what LVM, LUKS and dmraid create when they
+# activate something. The live system itself needs none.
+check_no_dm_devices() {
+	local devices=(/sys/block/dm-*) names=() dev
+	[[ -e ${devices[0]} ]] || return 0
+	for dev in "${devices[@]}"; do
+		names+=("$(<"${dev}/dm/name")")
+	done
+	echo "active device-mapper devices: ${names[*]}"
+	return 1
+}
+
+# Block devices may only be mounted by the live system itself (under
+# /run/archiso). Anything else means a disk was mounted without being asked.
+check_no_disk_mounts() {
+	local mounts
+	mounts=$(findmnt -rn -o SOURCE,TARGET | awk '$1 ~ /^\/dev\// && $2 !~ /^\/run\/archiso\// { print $1 " on " $2 }')
+	[[ -z ${mounts} ]] || {
+		echo "${mounts//$'\n'/, }"
+		return 1
+	}
+}
+
+check_no_swap() {
+	local swaps
+	swaps=$(swapon --noheadings --show=NAME)
+	[[ -z ${swaps} ]] || {
+		echo "swap in use: ${swaps//$'\n'/ }"
+		return 1
+	}
+}
+
+check_auto_activation_config() {
+	[[ $(readlink /etc/udev/rules.d/64-md-raid-assembly.rules) == /dev/null ]] || {
+		echo "md auto-assembly udev rule is not masked"
+		return 1
+	}
+	[[ $(lvmconfig activation/auto_activation_volume_list 2>&1) == 'auto_activation_volume_list=[]' ]] || {
+		echo "LVM auto_activation_volume_list is not empty"
+		return 1
+	}
+	[[ $(readlink /etc/systemd/system-generators/systemd-gpt-auto-generator) == /dev/null ]] || {
+		echo "systemd-gpt-auto-generator is not masked"
+		return 1
+	}
+}
+
+check_no_local_name_services() {
+	local protocols
+	protocols=$(resolvectl status 2>&1 | sed -n 's/^ *Protocols: //p' | head -n 1)
+	[[ ${protocols} == *-LLMNR* && ${protocols} == *-mDNS* ]] || {
+		echo "systemd-resolved protocols: ${protocols:-unknown}"
+		return 1
+	}
+	# Avahi comes in as a dependency and could be started over D-Bus.
+	local unit
+	for unit in avahi-daemon.service avahi-daemon.socket; do
+		[[ $(systemctl is-enabled "${unit}" 2>/dev/null) == masked ]] || {
+			echo "${unit} is not masked"
+			return 1
+		}
+	done
+}
+
+check_no_connectivity_check() {
+	NetworkManager --print-config 2>/dev/null |
+		awk '/^\[connectivity\]/ { s = 1; next } /^\[/ { s = 0 } s && /^enabled=false/ { found = 1 } END { exit !found }' || {
+		echo "NetworkManager connectivity check is not disabled"
+		return 1
+	}
+}
+
+check_pacman_snapshot() {
+	local snapshot servers bad
+	snapshot=$(manifest_value snapshot_date)
+	servers=$(grep -h '^[[:space:]]*Server[[:space:]]*=' /etc/pacman.conf /etc/pacman.d/mirrorlist | sed 's/^[^=]*=[[:space:]]*//')
+	[[ -n ${servers} ]] || {
+		echo "no Server lines"
+		return 1
+	}
+	bad=$(grep -v "^https://archive\.archlinux\.org/repos/${snapshot}/" <<<"${servers}")
+	[[ -z ${bad} ]] || {
+		echo "not pinned to ${snapshot}: ${bad//$'\n'/ }"
+		return 1
+	}
+}
+
+# Every tool in the catalog is installed, and its version check runs.
+check_catalog_tools() {
+	command -v sanctum >/dev/null || {
+		echo "the sanctum command is missing"
+		return 1
+	}
+	sanctum catalog verify >/dev/null
+}
+
+# Nothing that mounts disks automatically may be installed (ADR-0006).
+check_no_automount() {
+	local pkg found=()
+	for pkg in udisks2 gvfs thunar-volman; do
+		pacman -Q "${pkg}" >/dev/null 2>&1 && found+=("${pkg}")
+	done
+	((${#found[@]} == 0)) || {
+		echo "installed: ${found[*]}"
+		return 1
+	}
+}
+
+if ((boot_mode)); then
+	# Let every other start-up job finish first, so the checks see the
+	# system as a user would. Give up waiting after three minutes.
+	for _ in $(seq 180); do
+		systemctl list-jobs --no-legend | grep -qv sanctum-selftest || break
+		sleep 1
+	done
+fi
+
+printf 'SANCTUM-SELFTEST: start (%s)\n' "$(. /etc/os-release && printf '%s' "${PRETTY_NAME:-unknown}")"
+check "identity (os-release and manifest)" check_identity
+check "hostname is sanctum" check_hostname
+check "kernel is linux-hardened" check_kernel
+check "no failed units" check_no_failed_units
+check "sshd is off" check_sshd_off
+check "firewall is default-deny" check_firewall
+check "no network listeners" check_no_listeners
+check "no RAID arrays assembled" check_no_md_arrays
+check "no LVM, LUKS or dm devices active" check_no_dm_devices
+check "no disks mounted" check_no_disk_mounts
+check "no swap in use" check_no_swap
+check "auto-activation disabled" check_auto_activation_config
+check "no mDNS or LLMNR" check_no_local_name_services
+check "no connectivity checks" check_no_connectivity_check
+check "pacman pinned to the snapshot" check_pacman_snapshot
+check "no automount software" check_no_automount
+check "catalog tools installed and start" check_catalog_tools
+
+if ((failures == 0)); then
+	printf 'SANCTUM-SELFTEST: PASS\n'
+	status=0
+else
+	printf 'SANCTUM-SELFTEST: FAIL (%d failed)\n' "${failures}"
+	status=1
+fi
+
+if ((boot_mode)); then
+	sleep 1
+	systemctl poweroff --no-block
+fi
+exit "${status}"

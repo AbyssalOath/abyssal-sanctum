@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Abyssal Sanctum terminal colours: dark background, the Abyssal blue
+     for the cursor, and a large scrollback for long command output. -->
+<channel name="xfce4-terminal" version="1.0">
+  <property name="color-use-theme" type="bool" value="false"/>
+  <property name="color-background" type="string" value="#0b0e14"/>
+  <property name="color-foreground" type="string" value="#d6dbe4"/>
+  <property name="color-cursor" type="string" value="#3fa9f5"/>
+  <property name="color-cursor-use-default" type="bool" value="false"/>
+  <property name="font-name" type="string" value="DejaVu Sans Mono 11"/>
+  <property name="scrolling-lines" type="uint" value="100000"/>
+  <property name="misc-confirm-close" type="bool" value="true"/>
+</channel>

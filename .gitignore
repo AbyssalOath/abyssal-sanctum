@@ -1,0 +1,111 @@
+# Abyssal Sanctum .gitignore
+#
+# Sanctum's work involves disk images, evidence and malware. Anything of
+# that kind must never be committed, even by accident, so it is ignored
+# here wherever it might land, not only under out/.
+
+# Build output ------------------------------------------------------------------
+
+# ISO builds, logs, manifests, package and Rust caches, VM sockets.
+/out/
+# Cargo build output.
+/target/
+**/*.rs.bk
+# Written by the release workflow (scripts/release/release-notes.sh).
+/release-notes.md
+
+# ISOs, disk and virtual machine images -----------------------------------------
+
+*.iso
+*.img
+*.raw
+*.qcow2
+*.vmdk
+*.vdi
+*.vhd
+*.vhdx
+# The disk-safety test fixtures are compressed images and stay tracked.
+!/tests/fixtures/disk-safety/*.img.xz
+
+# Evidence, case files and system artifacts --------------------------------------
+
+# Forensic images (E01/Ex01, AFF, raw dd) and ddrescue maps.
+*.[Ee]0[1-9]
+*.[Ee]x0[1-9]
+*.aff
+*.aff4
+*.dd
+*.map
+# Memory images and Windows memory files.
+*.mem
+*.vmem
+*.dmp
+*.lime
+hiberfil.sys
+pagefile.sys
+swapfile.sys
+# Windows event logs and registry hives copied out of a system.
+*.evtx
+NTUSER.DAT
+UsrClass.dat
+# Packet captures can contain credentials and private traffic.
+*.pcap
+*.pcapng
+# Case directories and session logs (docs/security/forensic-workflow.md).
+/case/
+/cases/
+/case-*/
+session-*.log
+
+# Malware, quarantine and detection content --------------------------------------
+
+# Never commit live samples or quarantined files. Test corpora live outside
+# the repository (antimalware gap analysis, section 8).
+/samples/
+/corpus/
+/malware/
+/quarantine/
+**/quarantine/
+*.vir
+*.infected
+*.quarantine
+# ClamAV signature databases (downloaded or from update packs).
+*.cvd
+*.cld
+*.cud
+# Compiled YARA rules.
+*.yarc
+# Collected package sources for a release (scripts/release/fetch-sources.sh).
+/sources-v*/
+*.src.tar.gz
+
+# Secrets and keys ----------------------------------------------------------------
+
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.kdbx
+.netrc
+id_rsa
+id_ecdsa
+id_ed25519
+*.minisign.key
+minisign.key
+# Public keys (*.pub) may be committed deliberately; private keys never.
+
+# Editors, tools and operating systems --------------------------------------------
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+# Personal Claude Code settings; shared project settings may be committed.
+.claude/settings.local.json

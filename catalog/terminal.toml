@@ -1,0 +1,77 @@
+# Tool catalog: Terminal. Format and risk levels: docs/operations/catalog.md.
+
+[category]
+id = "terminal"
+name = "Terminal"
+summary = "Shells, editors and file managers"
+icon = "utilities-terminal"
+
+[[tool]]
+id = "xfce4-terminal"
+name = "Terminal"
+package = "xfce4-terminal"
+command = "xfce4-terminal"
+gui = true
+risk = "modifies"
+summary = "A root shell in a window"
+icon = "utilities-terminal"
+
+[[tool]]
+id = "tmux"
+name = "tmux"
+package = "tmux"
+command = "tmux"
+risk = "read-only"
+summary = "Several shells in one terminal; sessions survive SSH disconnects"
+usage = ["tmux", "tmux attach"]
+check = ["tmux", "-V"]
+
+[[tool]]
+id = "mc"
+name = "Midnight Commander"
+package = "mc"
+command = "mc"
+risk = "modifies"
+summary = "Two-pane file manager for the console"
+usage = ["mc /mnt"]
+
+[[tool]]
+id = "thunar"
+name = "Thunar"
+package = "thunar"
+command = "thunar"
+gui = true
+risk = "modifies"
+summary = "Graphical file manager"
+note = "It does not mount disks automatically; mount them in a terminal first."
+icon = "org.xfce.thunar"
+
+[[tool]]
+id = "vim"
+name = "Vim"
+package = "vim"
+command = "vim"
+risk = "modifies"
+summary = "Text editor"
+usage = ["vim /mnt/etc/fstab"]
+check = ["vim", "--version"]
+
+[[tool]]
+id = "nano"
+name = "nano"
+package = "nano"
+command = "nano"
+risk = "modifies"
+summary = "Simple text editor"
+usage = ["nano /mnt/etc/fstab"]
+check = ["nano", "--version"]
+
+[[tool]]
+id = "mousepad"
+name = "Mousepad"
+package = "mousepad"
+command = "mousepad"
+gui = true
+risk = "modifies"
+summary = "Graphical text editor"
+icon = "org.xfce.mousepad"
