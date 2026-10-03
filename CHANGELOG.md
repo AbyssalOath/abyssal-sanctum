@@ -6,6 +6,8 @@ All notable changes to Abyssal Sanctum are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-03
+
 ### Added
 
 - Containerised ISO build (`scripts/build/build-iso.sh`), pinned to an Arch
