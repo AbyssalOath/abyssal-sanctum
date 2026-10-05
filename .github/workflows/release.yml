@@ -8,7 +8,8 @@
 #
 # The ISO itself is not attached by the workflow (ADR-0005). The maintainer
 # downloads it from this run's artifacts, verifies it, signs a Secure Boot
-# copy offline (ADR-0011), attaches or uploads both, and publishes the draft.
+# copy offline (ADR-0011), attaches both (or uploads to SourceForge if over
+# 2 GiB), uploads the package sources to SourceForge, and publishes the draft.
 name: Release
 
 on:

@@ -16,8 +16,10 @@ installation, and works offline.
 
 ## Download
 
-ISOs are linked from [GitHub Releases](https://github.com/AbyssalOath/abyssal-sanctum/releases),
-together with their checksums. See
+ISOs are on [GitHub Releases](https://github.com/AbyssalOath/abyssal-sanctum/releases),
+together with their checksums. The source code of every package in the ISO
+(GPL) is on [SourceForge](https://sourceforge.net/projects/abyssal-sanctum/files/sources/),
+one folder per release. See
 [writing the ISO to USB](docs/getting-started/writing-to-usb.md) for how to
 verify a download and write it to a USB stick.
 

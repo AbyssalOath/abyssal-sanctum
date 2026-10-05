@@ -13,8 +13,7 @@ the source obligations of the GPL packages it redistributes.
 Constraints from earlier decisions:
 
 - The ISO is uploaded by hand: attached to the GitHub release while under
-  2 GiB, otherwise hosted on SourceForge or the project site (ADR-0005,
-  updated 2026-10-05).
+  2 GiB, otherwise hosted on SourceForge (ADR-0005, updated 2026-10-05).
 - No long-lived secrets in CI (the project brief).
 
 ## Decision
@@ -71,8 +70,11 @@ and its packaging repository at that version.
 
 Links alone are not enough. Arch's source server
 (`sources.archlinux.org`) had only 56 of the 571 package bases in v0.1.0's
-snapshot. The maintainer therefore **publishes the source tarballs next to
-the ISO** on the download host for every release.
+snapshot. The maintainer therefore **publishes the source tarballs** for
+every release on SourceForge, at
+`https://sourceforge.net/projects/abyssal-sanctum/files/sources/vX.Y.Z/`
+(v0.1.0: 571 tarballs, 24.5 GB; the largest, edk2, is 3.1 GB, over
+GitHub's 2 GiB asset limit).
 `scripts/release/fetch-sources.sh` collects them in the pinned builder
 container: Arch's tarball where it exists, otherwise the package's Arch
 packaging repository at the version tag, built with `makepkg --allsource`
@@ -90,5 +92,5 @@ checksums). Sanctum's own source is the tagged commit on GitHub.
 - A release build downloads every package and the Rust toolchain again. It
   takes longer and uses the archive's bandwidth. Releases are rare enough
   for that.
-- The download host must hold the ISO and the source mirror (several GB per
-  release).
+- SourceForge holds the source mirror (tens of GB per release), and any
+  ISO too large for GitHub.

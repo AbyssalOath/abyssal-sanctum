@@ -56,6 +56,7 @@ The limit can be raised in a reviewed commit when there is a real need.
 The v0.1.0 ISO is 1567 MiB, under GitHub's 2 GiB limit for release assets,
 so it was attached to the GitHub release directly. While an ISO stays under
 2 GiB, it is attached to the GitHub release; above that, it goes to
-SourceForge or the project site as decided above. The 3 GiB budget is
-unchanged. A Secure Boot signed ISO (ADR-0011) is about 2 MiB larger than
-the unsigned one.
+[SourceForge](https://sourceforge.net/projects/abyssal-sanctum/), as
+decided above. The package sources always go to SourceForge, under
+`sources/vX.Y.Z/` (ADR-0009). The 3 GiB budget is unchanged. A Secure
+Boot signed ISO (ADR-0011) is about 2 MiB larger than the unsigned one.

@@ -331,8 +331,9 @@ Found and fixed during testing:
      (GA §8.4).
    - `gh release create` with notes from `CHANGELOG.md`. The GitHub
      Release holds the `.sha256`, the source manifest and the download
-     link. The ISO itself is hosted on SourceForge or the project site
-     (ADR-0005).
+     link. The ISO is attached to the release while under 2 GiB, otherwise
+     hosted on SourceForge; package sources are on SourceForge
+     (ADR-0005, ADR-0009).
    - Publish the ISO to the download host. Decided: the maintainer
      downloads the CI-built ISO, checks it with `gh attestation verify`, and
      uploads it by hand (no stored secret).

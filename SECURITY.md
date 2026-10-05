@@ -32,10 +32,12 @@ In scope:
 ## Verifying downloads
 
 ISOs are attached to the GitHub Release for each version, or, if larger
-than GitHub allows, downloaded from SourceForge or the project site with the
-`.sha256` file and the download link on the GitHub Release (ADR-0005). When
-the ISO comes from another host, a matching checksum shows that host served
-the right file.
+than GitHub allows, downloaded from
+[SourceForge](https://sourceforge.net/projects/abyssal-sanctum/files/), with
+the `.sha256` file and the download link on the GitHub Release (ADR-0005).
+When the ISO comes from SourceForge, a matching checksum shows SourceForge
+served the right file. Package sources are on SourceForge under
+`sources/vX.Y.Z/`, with their own `SHA256SUMS`.
 
 From v0.2.0, releases also include an ISO signed for Secure Boot by the
 maintainer (ADR-0011). Its certificate's fingerprints are in the release

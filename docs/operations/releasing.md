@@ -4,9 +4,11 @@ How a version of Sanctum is released. The design and the reasons are in
 [ADR-0009](../architecture/decisions/0009-release-integrity.md).
 
 ISOs under 2 GiB are attached to the GitHub release by hand; larger ones go
-to SourceForge or the project site, with a download link in the release.
-The GitHub release also holds the checksums, the source manifest and the
-package manifest
+to [SourceForge](https://sourceforge.net/projects/abyssal-sanctum/files/),
+with a download link in the release. The package sources (GPL) always go to
+SourceForge, under `sources/vX.Y.Z/`: they are tens of GB, and single
+tarballs exceed GitHub's 2 GiB asset limit. The GitHub release also holds
+the checksums, the source manifest and the package manifest
 ([ADR-0005](../architecture/decisions/0005-iso-hosting-and-size-budget.md)).
 From v0.2.0, the maintainer also signs the ISO for Secure Boot
 ([ADR-0011](../architecture/decisions/0011-secure-boot-shim-mok.md)).
@@ -118,10 +120,25 @@ The Release workflow then:
    abyssal-sanctum-vX.Y.Z-x86_64-secureboot.iso`), enrol the key, check
    `sanctum secureboot status`, and remove the key with
    `sanctum secureboot forget`.
-5. Upload: the signed ISO (the recommended download) with its `.sha256`
-   and `-secureboot.txt`; the unsigned ISO and its `.sha256`, which the
-   attestation covers; and the `sources-vX.Y.Z/` directory.
-6. Download the ISOs again from the host and run `sha256sum -c` once more.
+5. Attach to the draft GitHub release: the signed ISO (the recommended
+   download) with its `.sha256` and `-secureboot.txt`, and the unsigned ISO
+   and its `.sha256`, which the attestation covers. An ISO over 2 GiB goes
+   to SourceForge instead (`/home/frs/project/abyssal-sanctum/vX.Y.Z/`).
+6. Upload the sources to SourceForge with your SSH key (added under
+   SourceForge's Account Settings, SSH Settings). SourceForge's rsync cannot
+   create more than one new folder level, so create the folder first:
+
+   ```bash
+   printf 'mkdir /home/frs/project/abyssal-sanctum/sources/vX.Y.Z\n' \
+     | sftp -b - USER@frs.sourceforge.net
+   rsync -avP --partial sources-vX.Y.Z/ \
+     USER@frs.sourceforge.net:/home/frs/project/abyssal-sanctum/sources/vX.Y.Z/
+   ```
+
+   Rerun the `rsync` if the connection drops; it resumes. The SourceForge
+   page should show every tarball plus `SHA256SUMS` and
+   `SOURCE-NOTES.txt`.
+7. Download the ISOs again and run `sha256sum -c` once more.
 
 The first time, create the key with
 `scripts/release/make-secureboot-key.sh DIR` and keep `DIR` offline, with a
@@ -129,8 +146,10 @@ backup. Never put the key in the repository or in CI.
 
 ## 5. Publish
 
-1. Edit the draft release on GitHub: replace "DOWNLOAD LINK" with the ISO's
-   address on the download host, and add a link to the sources directory.
+1. Edit the draft release on GitHub. The Sources section already links to
+   `https://sourceforge.net/projects/abyssal-sanctum/files/sources/vX.Y.Z/`;
+   check that it opens. If an ISO went to SourceForge, add its link to the
+   Download section.
 2. Add a "Tested on" line from the hardware checklist.
 3. Add the Secure Boot certificate's SHA-1 and SHA-256 fingerprints from the
    `-secureboot.txt` file. Technicians compare the SHA-1 in MokManager.

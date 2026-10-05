@@ -25,8 +25,9 @@ Abyssal Sanctum v${version}: Arch Linux-based System Recovery Environment.
 
 ## Download
 
-The maintainer attaches the ISO here, or adds a download link if it is over
-GitHub's 2 GiB limit (ADR-0005):
+The ISOs are attached to this release. An ISO over GitHub's 2 GiB limit is
+on SourceForge instead: https://sourceforge.net/projects/abyssal-sanctum/files/v${version}/
+(ADR-0005).
 
 - **${iso%.iso}-secureboot.iso**: signed for Secure Boot; boots with Secure
   Boot on (after a one-time key enrolment, see
@@ -48,6 +49,14 @@ Release assets here:
 - \`${iso%.iso}-secureboot.txt\`: what was signed, and the unsigned ISO it came from
 - \`abyssal-sanctum-v${version}-x86_64.sources.txt\`: where to get the source of every package (GPL)
 - \`abyssal-sanctum-v${version}-x86_64.manifest.json\`: every package and version in the ISO
+
+## Sources
+
+Corresponding source for every package in the ISO (GPL):
+https://sourceforge.net/projects/abyssal-sanctum/files/sources/v${version}/
+with \`SHA256SUMS\`, and \`SOURCE-NOTES.txt\` for any package whose
+source needed special handling. Sanctum's own source is tag v${version} in
+this repository.
 
 ## Verify
 
