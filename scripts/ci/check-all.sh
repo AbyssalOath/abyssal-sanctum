@@ -40,7 +40,8 @@ gate "Tool catalog" cargo run --locked --quiet -- catalog check
 gate "Markdown lint" docker run --rm -v "${repo_root}:/workdir:ro" -w /workdir "${markdownlint_image}"
 gate "Links" docker run --rm -v "${repo_root}:/input:ro" -w /input "${lychee_image}" --config lychee.toml --no-progress .
 gate "actionlint" docker run --rm -v "${repo_root}:/repo:ro" -w /repo "${actionlint_image}"
-gate "zizmor" docker run --rm -v "${repo_root}:/repo:ro" -w /repo "${zizmor_image}" --offline .github/workflows
+# The whole repository, as zizmor-action scans it (workflows and dependabot.yml).
+gate "zizmor" docker run --rm -v "${repo_root}:/repo:ro" -w /repo "${zizmor_image}" --offline .
 
 if ((${#failed[@]})); then
 	die "failed: $(printf '%s; ' "${failed[@]}")"

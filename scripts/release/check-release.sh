@@ -27,7 +27,10 @@ heading=$(grep -m1 -E "^## \[${version//./\\.}\]" CHANGELOG.md || true)
 	die "CHANGELOG.md needs a '## [${version}] - YYYY-MM-DD' section (scripts/release/prepare.sh adds it)"
 
 if ((on_main)); then
-	git fetch --quiet origin main
+	# CI checks out with full history (fetch-depth: 0), so origin/main is
+	# already present, and the checkout keeps no credentials to fetch with.
+	# Fetch only when the ref is missing, as in some local clones.
+	git rev-parse --verify --quiet origin/main >/dev/null || git fetch --quiet origin main
 	git merge-base --is-ancestor HEAD origin/main ||
 		die "the tagged commit is not on main; release tags must point to merged commits"
 fi

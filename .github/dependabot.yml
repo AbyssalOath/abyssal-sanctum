@@ -1,11 +1,15 @@
 # Keeps the commit-SHA pins of GitHub Actions and the Cargo lockfile current.
-# Every update arrives as a reviewable pull request.
+# Every update arrives as a reviewable pull request. The cooldown waits a
+# week after a version is published before proposing it, so a compromised
+# release is usually caught and pulled before it reaches this repository.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
@@ -13,3 +17,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
