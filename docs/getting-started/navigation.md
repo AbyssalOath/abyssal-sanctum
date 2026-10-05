@@ -18,6 +18,13 @@ banner lists the most useful commands. Further consoles are on
 | `sanctum tools [CATEGORY]` | List the tools, all or in one category |
 | `sanctum tool ID` | One tool: purpose, risk, example commands, guide |
 | `sanctum disks` | Read-only overview of every disk, its partitions and SMART health |
+| `sanctum targets` | Find the installed systems: Windows (and whether it is hibernated), Linux, encrypted volumes |
+| `sanctum mount DEVICE` | Mount a partition read-only (BitLocker and LUKS are unlocked first); `--rw` to write |
+| `sanctum umount [--all]` | Unmount what `sanctum mount` mounted |
+| `sanctum update` | ClamAV databases: download, `--import` or `--export` an offline pack, `--status` |
+| `sanctum scan DIR...` | Malware scan with a case report ([guide](../security/offline-malware-scanning.md)) |
+| `sanctum data status` | The [data partition](data-partition.md), which keeps databases and reports across reboots |
+| `sanctum secureboot status` | Secure Boot state, and whether the Sanctum key is enrolled; `forget` removes it ([guide](secure-boot.md)) |
 | `sanctum docs [TOPIC]` | List the guides, or read one |
 | `sanctum ssh enable` | Allow remote SSH logins (see below) |
 | `sanctum selftest` | Check that the safe defaults are in effect |

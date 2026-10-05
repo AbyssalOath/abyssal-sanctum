@@ -18,6 +18,14 @@ available, and user-mode networking. Disk images given with `--disk` are
 attached with `snapshot=on`: Sanctum sees them as writable, but every write
 is discarded when the VM stops, so the image file never changes.
 
+To try a signed ISO with Secure Boot on (OVMF with Microsoft's keys, as on
+most PCs), keep the UEFI variables in a file so that an enrolled key
+survives the reboot:
+
+```bash
+./scripts/test/run-vm.sh --secureboot --vars sb-vars.fd out/abyssal-sanctum-v*-secureboot.iso
+```
+
 To run the automated boot test, which also checks the safe defaults:
 
 ```bash
@@ -26,7 +34,9 @@ To run the automated boot test, which also checks the safe defaults:
 
 ## With virt-manager, GNOME Boxes or VirtualBox
 
-- **Firmware:** UEFI (OVMF) or BIOS both work. Secure Boot must be off.
+- **Firmware:** UEFI (OVMF) or BIOS both work. Secure Boot must be off,
+  unless the ISO is a signed release
+  ([Secure Boot](secure-boot.md)).
 - **Memory:** 4 GiB. 2 GiB is enough for the console only.
 - **CD drive:** the Sanctum ISO.
 - **Disks to repair:** attach them read-only, or attach a copy, unless you

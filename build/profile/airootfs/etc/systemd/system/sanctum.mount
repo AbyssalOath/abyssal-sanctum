@@ -1,0 +1,17 @@
+# The Sanctum data partition: an ext4 filesystem labelled SANCTUM_DATA,
+# mounted at /sanctum when it appears (ADR-0010). Started by
+# /etc/udev/rules.d/90-sanctum-data.rules. Boot with sanctum.nodata to keep
+# it unmounted.
+[Unit]
+Description=Abyssal Sanctum data partition (label SANCTUM_DATA)
+Documentation=file:///usr/share/doc/abyssal-sanctum/docs/getting-started/data-partition.md
+ConditionKernelCommandLine=!sanctum.nodata
+BindsTo=dev-disk-by\x2dlabel-SANCTUM_DATA.device
+After=dev-disk-by\x2dlabel-SANCTUM_DATA.device
+
+[Mount]
+What=/dev/disk/by-label/SANCTUM_DATA
+Where=/sanctum
+Type=ext4
+# Data only: nothing on it can be run, and no device files or setuid.
+Options=rw,nosuid,nodev,noexec,noatime

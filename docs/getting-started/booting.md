@@ -2,11 +2,14 @@
 
 ## Before you boot
 
-- **Secure Boot must be off.** Sanctum is not signed for Secure Boot yet.
+- **Secure Boot:** signed releases (from v0.2.0) boot with Secure Boot on,
+  after a one-time key enrolment per machine: see
+  [booting with Secure Boot on](secure-boot.md). v0.1.0 and unsigned builds
+  need Secure Boot off.
 - **BitLocker:** changing the Secure Boot setting on a Windows machine with
   BitLocker makes Windows ask for the **BitLocker recovery key** on its next
   boot. Make sure you have the key before changing anything in the firmware
-  settings.
+  settings, or use a signed release and leave Secure Boot on.
 - Sanctum does not mount, repair, assemble or activate anything on the
   machine's disks by itself (ADR-0006).
 
@@ -24,7 +27,7 @@ It boots the first entry after 10-15 seconds.
 | with speech | You need the speakup screen reader |
 | Memtest86+ | Testing RAM |
 | Hardware Information (HDT), BIOS only | Looking at hardware without starting Linux |
-| EFI Shell, UEFI only | Inspecting firmware, devices and EFI variables |
+| EFI Shell, UEFI only | Inspecting firmware, devices and EFI variables. Not available with Secure Boot on. |
 | Boot existing OS, BIOS only | Starting the installed system instead |
 
 ## After boot

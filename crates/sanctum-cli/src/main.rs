@@ -3,13 +3,21 @@
 //! Run without arguments for the interactive menu. See `sanctum --help`
 //! and docs/getting-started/navigation.md. Why this is in Rust: ADR-0008.
 
+mod blockdev;
 mod catalog;
+mod clamav;
+mod data;
 mod disks;
 mod docs;
 mod menu;
+mod mount;
 mod paths;
 mod render;
+mod scan;
+mod secureboot;
 mod ssh;
+mod sys;
+mod targets;
 mod term;
 
 use crate::term::{out, outln};
@@ -75,6 +83,73 @@ enum Cmd {
     },
     /// Check that Sanctum's safe defaults are in effect (read-only)
     Selftest,
+    /// Find the installed systems (Windows, Linux) on this machine's disks
+    Targets {
+        /// Print JSON instead of a table
+        #[arg(long)]
+        json: bool,
+    },
+    /// Mount a target's filesystem: read-only unless --rw (BitLocker and
+    /// LUKS are unlocked first)
+    Mount {
+        /// The partition, for example /dev/sda3
+        device: String,
+        /// Mount read-write (asks for confirmation; refused for a
+        /// hibernated Windows volume)
+        #[arg(long)]
+        rw: bool,
+        /// Where to mount it (default: /mnt/sanctum/<device name>)
+        #[arg(long, value_name = "DIR")]
+        at: Option<PathBuf>,
+        /// Do not ask for confirmation (for scripts)
+        #[arg(long)]
+        yes: bool,
+    },
+    /// Unmount what `sanctum mount` mounted, and lock encrypted volumes again
+    Umount {
+        /// A mount point or device; may be left out when only one is mounted
+        what: Option<String>,
+        /// Unmount everything Sanctum mounted
+        #[arg(long)]
+        all: bool,
+    },
+    /// Scan mounted targets for malware with ClamAV and write a case report
+    Scan {
+        /// Directories to scan, for example /mnt/sanctum/sda3
+        #[arg(required = true)]
+        paths: Vec<PathBuf>,
+        /// A name for the case (default: scan)
+        #[arg(long)]
+        case: Option<String>,
+        /// Do not check NTFS alternate data streams
+        #[arg(long)]
+        no_streams: bool,
+    },
+    /// ClamAV databases: download, import or export an offline update pack
+    Update {
+        /// Show the installed databases and their age
+        #[arg(long, conflicts_with_all = ["import", "export"])]
+        status: bool,
+        /// Import an update pack (.tar) or a folder of database files
+        #[arg(long, value_name = "PACK", conflicts_with = "export")]
+        import: Option<PathBuf>,
+        /// Write an update pack of the current databases (default: the
+        /// data partition's updates folder)
+        // A String, not a PathBuf: clap's path parser rejects the empty
+        // value that stands for "no path given".
+        #[arg(long, value_name = "PATH", num_args = 0..=1, default_missing_value = "")]
+        export: Option<String>,
+    },
+    /// Secure Boot state, and removing the Sanctum key from a machine
+    Secureboot {
+        #[command(subcommand)]
+        action: SecurebootAction,
+    },
+    /// The Sanctum data partition (label SANCTUM_DATA)
+    Data {
+        #[command(subcommand)]
+        action: DataAction,
+    },
     /// Check or verify the tool catalog
     Catalog {
         #[command(subcommand)]
@@ -85,6 +160,20 @@ enum Cmd {
     Render {
         #[command(subcommand)]
         what: RenderAction,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum DataAction {
+    /// Show whether a data partition is mounted, and what it holds
+    Status,
+    /// ERASE a disk or partition and make it the Sanctum data partition
+    Init {
+        /// For example /dev/sdb (a whole USB stick) or /dev/sdb1
+        device: String,
+        /// Do not ask for confirmation (for scripts)
+        #[arg(long)]
+        yes: bool,
     },
 }
 
@@ -100,6 +189,14 @@ enum SshAction {
     Disable,
     /// Show whether SSH is on
     Status,
+}
+
+#[derive(Debug, Subcommand)]
+enum SecurebootAction {
+    /// Show Secure Boot, the boot chain and whether the Sanctum key is enrolled
+    Status,
+    /// Ask shim to remove the Sanctum key from this machine at the next boot
+    Forget,
 }
 
 #[derive(Debug, Subcommand)]
@@ -178,8 +275,20 @@ fn catalog_check(catalog_dir: &Path, packages: &Path, docs: &Path) -> Result<(),
     }
 }
 
-fn run(cli: Cli) -> Result<(), String> {
+/// Run the command; the result is the process exit code.
+fn run(cli: Cli) -> Result<u8, String> {
     match cli.command {
+        Some(Cmd::Scan {
+            paths,
+            case,
+            no_streams,
+        }) => scan::run(&paths, case.as_deref(), !no_streams),
+        other => run_command(other).map(|()| 0),
+    }
+}
+
+fn run_command(command: Option<Cmd>) -> Result<(), String> {
+    match command {
         None => {
             let catalog = load_catalog()?;
             if std::io::stdin().is_terminal() {
@@ -220,6 +329,33 @@ fn run(cli: Cli) -> Result<(), String> {
             SshAction::Enable { key } => ssh::enable(key.as_deref()),
             SshAction::Disable => ssh::disable(),
             SshAction::Status => ssh::status(),
+        },
+        Some(Cmd::Secureboot { action }) => match action {
+            SecurebootAction::Status => secureboot::status(),
+            SecurebootAction::Forget => secureboot::forget(),
+        },
+        Some(Cmd::Targets { json }) => targets::run(json),
+        Some(Cmd::Mount {
+            device,
+            rw,
+            at,
+            yes,
+        }) => mount::mount(&device, rw, at.as_deref(), yes),
+        Some(Cmd::Umount { what, all }) => mount::umount(what.as_deref(), all),
+        Some(Cmd::Scan { .. }) => Err("internal error: scan is handled by run()".to_owned()),
+        Some(Cmd::Update {
+            status,
+            import,
+            export,
+        }) => match (status, import, export) {
+            (true, _, _) => clamav::status(),
+            (_, Some(pack), _) => clamav::import(&pack).and_then(|()| clamav::status()),
+            (_, _, Some(path)) => clamav::export((!path.is_empty()).then(|| Path::new(&path))),
+            _ => clamav::update_online(),
+        },
+        Some(Cmd::Data { action }) => match action {
+            DataAction::Status => data::status(),
+            DataAction::Init { device, yes } => data::init(&device, yes),
         },
         Some(Cmd::Selftest) => {
             let script = paths::selftest();
@@ -267,7 +403,7 @@ fn run(cli: Cli) -> Result<(), String> {
 
 fn main() -> ExitCode {
     match run(Cli::parse()) {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(code) => ExitCode::from(code),
         Err(message) => {
             eprintln!("sanctum: {message}");
             ExitCode::FAILURE
@@ -303,5 +439,25 @@ mod tests {
             })
         ));
         assert!(Cli::try_parse_from(["sanctum", "bogus"]).is_err());
+    }
+
+    fn export_arg(args: &[&str]) -> Option<String> {
+        match Cli::try_parse_from(args).expect("parses").command {
+            Some(Cmd::Update { export, .. }) => export,
+            _ => panic!("not an update command"),
+        }
+    }
+
+    #[test]
+    fn update_export_path_is_optional() {
+        assert_eq!(
+            export_arg(&["sanctum", "update", "--export"]).as_deref(),
+            Some("")
+        );
+        assert_eq!(
+            export_arg(&["sanctum", "update", "--export", "/tmp/x"]).as_deref(),
+            Some("/tmp/x")
+        );
+        assert_eq!(export_arg(&["sanctum", "update"]), None);
     }
 }

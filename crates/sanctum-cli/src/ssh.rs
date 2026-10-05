@@ -4,10 +4,11 @@
 //! explicit act with three parts: a way to log in (a root password or an
 //! authorized key), a running sshd, and port 22 open in the firewall.
 
+use crate::sys::require_root;
 use crate::term::{out, outln};
 use std::fs;
 use std::io::Write as _;
-use std::os::unix::fs::{MetadataExt as _, PermissionsExt as _};
+use std::os::unix::fs::PermissionsExt as _;
 use std::path::Path;
 use std::process::Command;
 
@@ -15,16 +16,6 @@ use crate::term;
 
 const AUTHORIZED_KEYS: &str = "/root/.ssh/authorized_keys";
 const NFT_SET: [&str; 3] = ["inet", "sanctum", "tcp_open"];
-
-/// The effective user is root. /proc/self belongs to the process's
-/// effective user id.
-fn require_root() -> Result<(), String> {
-    match fs::metadata("/proc/self") {
-        Ok(m) if m.uid() == 0 => Ok(()),
-        Ok(_) => Err("this needs root (the live system logs in as root)".to_owned()),
-        Err(e) => Err(format!("cannot determine the current user: {e}")),
-    }
-}
 
 fn run(program: &str, args: &[&str]) -> Result<(), String> {
     let status = Command::new(program)

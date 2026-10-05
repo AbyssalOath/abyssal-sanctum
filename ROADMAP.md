@@ -424,9 +424,27 @@ malware test corpus) still open.
 | AV-6 | Rootkits and boot integrity: driver signatures, MBR/VBR/EFI, Linux `system-check --root`, shadow copies | v0.4.0 | |
 | AV-7 | Measured detection rates and false positives, published per release | v0.3.0 onwards | |
 
-Secure Boot research (Phase 9) should start alongside AV-1: turning Secure
-Boot off on BitLocker machines is a real obstacle for fleet scanning
-(AGA section 9).
+AV-1 status (2026-10-05): implemented ([ADR-0010](docs/architecture/decisions/0010-targets-mounting-data-partition.md))
+and tested in QEMU:
+
+- The scan boot test (CI) passes: targets, hibernation refusal, read-only
+  mounts, EICAR in a file and in an alternate data stream, the case report
+  on the data partition, umount cleanup, fixtures unchanged.
+- By hand in a VM: `data init` and the automatic mount, an online
+  `update` (3.6 million signatures), `--export` and `--import` (a tampered
+  pack is refused), and a scan with the official databases (both EICAR
+  copies found; about 1.4 GB of RAM).
+- Still to test on hardware: a real USB data partition, a real Windows
+  disk, BitLocker unlocking.
+
+Secure Boot (Phase 9, brought forward): decided in
+[ADR-0011](docs/architecture/decisions/0011-secure-boot-shim-mok.md)
+(2026-10-05) after the [research report](docs/development/secure-boot-research.md):
+Fedora's Microsoft-signed shim, a Sanctum key that the maintainer keeps
+offline and signs with at release time, enrolment once per machine, and
+`sanctum secureboot forget` to remove the key. Status: prototype done in
+QEMU (boot chain, enrolment, removal, reproducible signing). Signed releases
+ship after the hardware test in ADR-0011 passes, planned for v0.2.0.
 
 ## Phase 5: Safety helpers (v0.2.0)
 

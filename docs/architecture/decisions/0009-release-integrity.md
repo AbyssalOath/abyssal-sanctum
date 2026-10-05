@@ -12,8 +12,9 @@ the source obligations of the GPL packages it redistributes.
 
 Constraints from earlier decisions:
 
-- The ISO is hosted on SourceForge or the project site, not on GitHub
-  (ADR-0005). The maintainer uploads it by hand.
+- The ISO is uploaded by hand: attached to the GitHub release while under
+  2 GiB, otherwise hosted on SourceForge or the project site (ADR-0005,
+  updated 2026-10-05).
 - No long-lived secrets in CI (the project brief).
 
 ## Decision

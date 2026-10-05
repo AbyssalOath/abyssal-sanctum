@@ -7,6 +7,28 @@ summary = "Malware scanning, rootkit checks, hashing and the firewall"
 icon = "security-high"
 
 [[tool]]
+id = "sanctum-scan"
+name = "Malware scan"
+package = "sanctum"
+command = "sanctum"
+risk = "read-only"
+summary = "Scan mounted targets with multi-threaded ClamAV, including NTFS alternate data streams, and write a case report"
+note = "Only reads: nothing is moved or deleted. Mount targets with sanctum mount first."
+usage = ["sanctum scan /mnt/sanctum/sda3", "sanctum scan --case acme-laptop /mnt/sanctum/sda3 /mnt/sanctum/sdb1"]
+docs = "security/offline-malware-scanning"
+also = ["windows", "forensics"]
+
+[[tool]]
+id = "sanctum-update"
+name = "Malware database update"
+package = "sanctum"
+command = "sanctum"
+risk = "modifies"
+summary = "Download ClamAV databases, or import and export offline update packs"
+usage = ["sanctum update --status", "sanctum update", "sanctum update --import /mnt/usb/sanctum-clamav-20261005.tar", "sanctum update --export"]
+docs = "security/offline-malware-scanning"
+
+[[tool]]
 id = "clamscan"
 name = "ClamAV scanner"
 package = "clamav"

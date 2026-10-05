@@ -52,7 +52,8 @@ manual dispatch.
    - Run `scripts/build/build-iso.sh`.
    - Upload the ISO, checksum and build log as the `iso` artifact (kept 7
      days). The size budget (ADR-0005) is enforced by the build itself.
-2. **Boot test** (UEFI and BIOS in parallel):
+2. **Boot tests** (in parallel): the self-test with UEFI and with BIOS,
+   and the scan test with UEFI (below). Each:
    - Download the ISO and verify its checksum.
    - Enable KVM and install QEMU and OVMF.
    - Run `scripts/test/boot-test.sh`.
@@ -115,6 +116,31 @@ The test passes only if all of these hold:
 
 Technicians can run `sanctum-selftest` by hand on a booted system. It
 changes nothing.
+
+### The scan test
+
+`scripts/test/boot-test.sh --scan` boots with the `sanctum.scantest`
+credential and the fixtures in `tests/fixtures/scan/` (built by
+`scripts/test/make-scan-fixtures.sh`):
+
+- a hibernated Windows NTFS volume with the EICAR test file in a folder and
+  in an alternate data stream,
+- a Linux ext4 volume with EICAR in one file,
+- a `SANCTUM_DATA` partition carrying a one-line test signature for EICAR,
+  so no real ClamAV databases are needed.
+
+`sanctum-scantest` checks, in order:
+
+1. the data partition is mounted safely;
+2. `sanctum targets` finds Windows (hibernated) and Linux;
+3. a read-write mount of the hibernated volume is refused;
+4. both volumes mount read-only;
+5. `sanctum scan` finds all three detections, including the stream, and
+   writes the report to the data partition;
+6. `sanctum umount` cleans up, including the read-only flag.
+
+Afterwards the host checks that the Windows and Linux images are unchanged
+and that the report is on the data image.
 
 ### Disk-safety fixtures
 

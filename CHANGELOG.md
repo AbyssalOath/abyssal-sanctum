@@ -6,8 +6,42 @@ All notable changes to Abyssal Sanctum are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Antimalware track, AV-1 (ADR-0010):
+  - `sanctum targets`: find Windows and Linux installations, encrypted
+    volumes, LVM/RAID and hibernated Windows, through private read-only
+    mounts that cannot write.
+  - `sanctum mount` and `sanctum umount`: read-only by default (journal
+    replay off, block device read-only); read-write after typing the device
+    name, and refused for hibernated Windows; BitLocker and LUKS unlocking.
+  - The data partition: an ext4 filesystem labelled `SANCTUM_DATA`, mounted
+    at `/sanctum` (`noexec`), for databases, update packs and case reports;
+    `sanctum data status` and `sanctum data init`.
+  - `sanctum update`: online ClamAV updates (signed databases only),
+    `--import` and `--export` of offline update packs (a pack is imported
+    only when every file passes its checksum and signature checks),
+    `--status` with signature age.
+  - `sanctum scan`: multi-threaded ClamAV (clamd), NTFS alternate data
+    streams, SHA-256 of every finding, JSON and HTML case reports.
+  - A scan boot test (`boot-test.sh --scan`, run in CI) with Windows, Linux
+    and data-partition fixtures, including EICAR in an alternate data
+    stream.
+- Secure Boot (ADR-0011, research report):
+  - `scripts/release/sign-secureboot.sh` makes a Secure Boot copy of a built
+    ISO, booting through Fedora's Microsoft-signed shim with systemd-boot,
+    the kernel and Memtest86+ signed with the Sanctum key. Signing is
+    reproducible; the key never enters CI.
+  - `scripts/release/make-secureboot-key.sh` creates the signing key.
+  - `sanctum secureboot status` and `sanctum secureboot forget` (removes the
+    Sanctum key from a machine through MokManager); `mokutil` added.
+  - `scripts/test/run-vm.sh --secureboot --vars FILE` for testing with
+    Secure Boot on.
+  - Guide: booting with Secure Boot on.
+
 ### Changed
 
+- ISOs under 2 GiB are attached to the GitHub release (ADR-0005 update).
 - Docs: release attestations need a public repository; CI timings measured
   on GitHub's runners; v0.1.0 hardware test results recorded in the
   roadmap.

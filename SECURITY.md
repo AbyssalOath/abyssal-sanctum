@@ -31,10 +31,17 @@ In scope:
 
 ## Verifying downloads
 
-ISOs are downloaded from SourceForge or the project site, not from GitHub.
-The GitHub Release for each version holds the `.sha256` file and the download
-link (ADR-0005). Because the checksum comes from GitHub and the ISO from
-somewhere else, a match shows the download host served the right file.
+ISOs are attached to the GitHub Release for each version, or, if larger
+than GitHub allows, downloaded from SourceForge or the project site with the
+`.sha256` file and the download link on the GitHub Release (ADR-0005). When
+the ISO comes from another host, a matching checksum shows that host served
+the right file.
+
+From v0.2.0, releases also include an ISO signed for Secure Boot by the
+maintainer (ADR-0011). Its certificate's fingerprints are in the release
+notes; check them in MokManager before enrolling the key on a machine. A
+report about the Secure Boot signing key or its use is a security issue:
+report it as described above.
 
 Releases carry GitHub build provenance attestations, which tie the ISO to
 the release workflow run and the tagged commit that built it, wherever it

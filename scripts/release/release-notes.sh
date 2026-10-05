@@ -25,13 +25,27 @@ Abyssal Sanctum v${version}: Arch Linux-based System Recovery Environment.
 
 ## Download
 
-The ISO is hosted outside GitHub (ADR-0005):
+The maintainer attaches the ISO here, or adds a download link if it is over
+GitHub's 2 GiB limit (ADR-0005):
 
-- **${iso}**: DOWNLOAD LINK (the maintainer adds this before publishing)
+- **${iso%.iso}-secureboot.iso**: signed for Secure Boot; boots with Secure
+  Boot on (after a one-time key enrolment, see
+  docs/getting-started/secure-boot.md) or off. Recommended.
+- **${iso}**: the same system unsigned, as built and attested by the release
+  workflow. Needs Secure Boot off.
+
+Secure Boot certificate (compare the SHA-1 in MokManager before enrolling):
+
+- SHA-1: FINGERPRINT (from ${iso%.iso}-secureboot.txt)
+- SHA-256: FINGERPRINT
+
+The maintainer removes the Secure Boot lines for a release that is not
+signed.
 
 Release assets here:
 
-- \`${iso}.sha256\`: checksum
+- \`${iso}.sha256\`, \`${iso%.iso}-secureboot.iso.sha256\`: checksums
+- \`${iso%.iso}-secureboot.txt\`: what was signed, and the unsigned ISO it came from
 - \`abyssal-sanctum-v${version}-x86_64.sources.txt\`: where to get the source of every package (GPL)
 - \`abyssal-sanctum-v${version}-x86_64.manifest.json\`: every package and version in the ISO
 
@@ -42,8 +56,10 @@ sha256sum -c ${iso}.sha256
 gh attestation verify ${iso} --repo AbyssalOath/abyssal-sanctum
 \`\`\`
 
-The attestation shows the ISO was built by this repository's release
-workflow from tag v${version}. See docs/getting-started/writing-to-usb.md.
+The attestation shows the unsigned ISO was built by this repository's
+release workflow from tag v${version}. The signed ISO is made from it by the
+maintainer (ADR-0011); \`${iso%.iso}-secureboot.txt\` records the unsigned
+ISO's SHA-256. See docs/getting-started/writing-to-usb.md.
 
 ## Changes
 ${section}

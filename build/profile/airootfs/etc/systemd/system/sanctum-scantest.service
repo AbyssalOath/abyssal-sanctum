@@ -1,0 +1,16 @@
+[Unit]
+Description=Abyssal Sanctum scan test (CI only)
+Documentation=file:///usr/local/bin/sanctum-scantest
+# Runs only when CI passes the sanctum.scantest system credential through
+# QEMU's SMBIOS (scripts/test/boot-test.sh --scan).
+ConditionCredential=sanctum.scantest
+After=multi-user.target sanctum.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sanctum-scantest
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

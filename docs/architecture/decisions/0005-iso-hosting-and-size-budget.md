@@ -50,3 +50,12 @@ The limit can be raised in a reviewed commit when there is a real need.
   built it.
 - The size budget still matters. Phase 1 trims releng packages Sanctum does
   not need, so the tools that matter have room.
+
+## Update (2026-10-05)
+
+The v0.1.0 ISO is 1567 MiB, under GitHub's 2 GiB limit for release assets,
+so it was attached to the GitHub release directly. While an ISO stays under
+2 GiB, it is attached to the GitHub release; above that, it goes to
+SourceForge or the project site as decided above. The 3 GiB budget is
+unchanged. A Secure Boot signed ISO (ADR-0011) is about 2 MiB larger than
+the unsigned one.

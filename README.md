@@ -42,10 +42,12 @@ Full instructions: [docs/getting-started/building.md](docs/getting-started/build
 
 ## Known limitations
 
-- **No Secure Boot support.** Secure Boot has to be turned off to boot
-  Sanctum. On Windows machines with BitLocker, changing the Secure Boot
+- **No Secure Boot support in v0.1.0.** Secure Boot has to be turned off to
+  boot it. On Windows machines with BitLocker, changing the Secure Boot
   setting makes Windows ask for the BitLocker recovery key on its next boot.
-  Have the key before you change it.
+  Have the key before you change it. Signed releases that boot with Secure
+  Boot on are planned for v0.2.0
+  ([ADR-0011](docs/architecture/decisions/0011-secure-boot-shim-mok.md)).
 - Sanctum does not activate RAID or LVM, mount disks, or start network
   services by itself ([ADR-0006](docs/architecture/decisions/0006-non-destructive-defaults.md)).
   Tools you run yourself, such as `fdisk` or `mkfs`, can still destroy data.

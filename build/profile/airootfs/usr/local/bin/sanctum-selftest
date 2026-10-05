@@ -176,9 +176,27 @@ check_no_dm_devices() {
 # /run/archiso). Anything else means a disk was mounted without being asked.
 check_no_disk_mounts() {
 	local mounts
-	mounts=$(findmnt -rn -o SOURCE,TARGET | awk '$1 ~ /^\/dev\// && $2 !~ /^\/run\/archiso\// { print $1 " on " $2 }')
+	# The live system (/run/archiso) and Sanctum's own data partition
+	# (/sanctum, checked separately) are allowed.
+	mounts=$(findmnt -rn -o SOURCE,TARGET | awk '$1 ~ /^\/dev\// && $2 !~ /^\/run\/archiso\// && $2 != "/sanctum" { print $1 " on " $2 }')
 	[[ -z ${mounts} ]] || {
 		echo "${mounts//$'\n'/, }"
+		return 1
+	}
+}
+
+# If something is mounted at /sanctum, it must be the labelled data
+# partition, mounted so that nothing on it can run (ADR-0010).
+check_data_partition() {
+	local source options
+	source=$(findmnt -rn -o SOURCE --mountpoint /sanctum) || return 0
+	[[ $(lsblk -no LABEL "${source}" 2>/dev/null) == SANCTUM_DATA ]] || {
+		echo "/sanctum holds ${source}, which is not labelled SANCTUM_DATA"
+		return 1
+	}
+	options=$(findmnt -rn -o OPTIONS --mountpoint /sanctum)
+	[[ ,${options}, == *,noexec,* && ,${options}, == *,nosuid,* ]] || {
+		echo "/sanctum is mounted without noexec or nosuid: ${options}"
 		return 1
 	}
 }
@@ -288,6 +306,7 @@ check "no network listeners" check_no_listeners
 check "no RAID arrays assembled" check_no_md_arrays
 check "no LVM, LUKS or dm devices active" check_no_dm_devices
 check "no disks mounted" check_no_disk_mounts
+check "data partition mounted safely (if present)" check_data_partition
 check "no swap in use" check_no_swap
 check "auto-activation disabled" check_auto_activation_config
 check "no mDNS or LLMNR" check_no_local_name_services
