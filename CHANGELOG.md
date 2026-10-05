@@ -42,6 +42,9 @@ All notable changes to Abyssal Sanctum are recorded here. The format follows
 ### Changed
 
 - ISOs under 2 GiB are attached to the GitHub release (ADR-0005 update).
+- `fetch-sources.sh` collects Mercurial sources, and falls back to the
+  Internet Archive for upstream files that vanished (checksums still
+  apply).
 - Docs: release attestations need a public repository; CI timings measured
   on GitHub's runners; v0.1.0 hardware test results recorded in the
   roadmap.

@@ -92,7 +92,15 @@ The Release workflow then:
    `makepkg --allsource`. This takes a few hours and several GB. The script
    can be stopped and restarted; finished tarballs are kept. Anything it
    could not collect is listed in `MISSING.txt`. Run it again for those
-   (`... sources-vX.Y.Z/ PKGBASE ...`), or fix the cause by hand.
+   (`... sources-vX.Y.Z/ PKGBASE ...`): network trouble often clears. When a
+   file has vanished upstream, the script tries the Internet Archive's copy;
+   makepkg accepts it only if it matches the PKGBUILD's checksum. What is
+   left needs a person: look for the exact file elsewhere (Fedora's source
+   cache, Software Heritage for git commits, the commit a moved tag used to
+   point at), or, as a last resort, an equivalent source of the same
+   version. Record every such case in `SOURCE-NOTES.txt` in the sources
+   directory. v0.1.0's notes show examples. Once `MISSING.txt` is resolved,
+   write the checksums: `(cd sources-vX.Y.Z && sha256sum -- *.src.tar.gz >SHA256SUMS)`.
 4. Sign it for Secure Boot, on your own machine, with the key from the
    offline store (asks for the key's passphrase):
 
