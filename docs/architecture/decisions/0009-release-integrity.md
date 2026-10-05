@@ -80,6 +80,10 @@ checksums). Sanctum's own source is the tagged commit on GitHub.
 
 ## Consequences
 
+- Attestations need a public repository (GitHub creates them for private
+  repositories only on Enterprise Cloud). The v0.1.0 attest step failed
+  while the repository was private, and passed once it was public.
+
 - Releasing needs a few manual steps (upload, mirror sources, publish).
   `docs/operations/releasing.md` lists them in order.
 - A release build downloads every package and the Rust toolchain again. It

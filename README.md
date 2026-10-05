@@ -9,10 +9,17 @@ diagnostics, repair, administration, security investigation and malware
 remediation. It boots from USB or in a virtual machine, runs without
 installation, and works offline.
 
-> **Status: early development (v0.1.0, unreleased).** The ISO has the v0.1
-> toolkit, the `sanctum` command, an optional Xfce desktop and offline
-> guides, with safe defaults checked in CI. The release pipeline is ready;
-> v0.1.0 waits for testing on real hardware. See [ROADMAP.md](ROADMAP.md).
+> **Status: v0.1.0, the first release.** The ISO has the v0.1 toolkit, the
+> `sanctum` command, an optional Xfce desktop and offline guides, with safe
+> defaults checked in CI and on real hardware. Next: the antimalware track
+> (v0.2.0). See [ROADMAP.md](ROADMAP.md).
+
+## Download
+
+ISOs are linked from [GitHub Releases](https://github.com/AbyssalOath/abyssal-sanctum/releases),
+together with their checksums. See
+[writing the ISO to USB](docs/getting-started/writing-to-usb.md) for how to
+verify a download and write it to a USB stick.
 
 ## Building
 

@@ -7,16 +7,16 @@ The reasons behind each phase are in the
 A phase is done only when its exit criteria pass in CI, or on real hardware
 where noted, and its docs are written.
 
-Status legend: **next** (active) · **planned** (scoped) · **research** (needs
-investigation before design).
+Status legend: **done** (released) · **next** (active) · **planned** (scoped)
+· **research** (needs investigation before design).
 
 | Phase | Theme | Target | Status |
 | --- | --- | --- | --- |
-| 0 | Foundations, decisions, containerised builder | v0.1.0 | **implemented, in review** |
-| 1 | Smallest bootable branded ISO with safe defaults | v0.1.0 | **implemented, in review** |
-| 2 | CI: lint gates, ISO build, QEMU boot tests | v0.1.0 | **implemented, in review** |
-| 3 | v0.1 toolkit, `sanctum` CLI, Xfce via `startx`, docs | v0.1.0 | **implemented, in review** |
-| 4 | Release pipeline and hardware validation, then tag v0.1.0 | v0.1.0 | **pipeline implemented; hardware testing and tag by the maintainer** |
+| 0 | Foundations, decisions, containerised builder | v0.1.0 | **done** |
+| 1 | Smallest bootable branded ISO with safe defaults | v0.1.0 | **done** |
+| 2 | CI: lint gates, ISO build, QEMU boot tests | v0.1.0 | **done** |
+| 3 | v0.1 toolkit, `sanctum` CLI, Xfce via `startx`, docs | v0.1.0 | **done** |
+| 4 | Release pipeline and hardware validation, then tag v0.1.0 | v0.1.0 | **done** |
 | 5 | Safety helpers: ro mount, forensic mode, chroot, case log | v0.2.0 | planned |
 | 6 | Local package repo and Warden integration | v0.3.0 | planned |
 | 7 | Windows recovery depth | v0.4.0 | planned |
@@ -210,9 +210,9 @@ Found and fixed during testing:
 - The snapshot's shellcheck 0.11 reports a check that Fedora's 0.10 does
   not have, which is why CI lints with the pinned version.
 
-Still to confirm on GitHub: hosted runners build within the time and disk
-limits, KVM works, and the SMBIOS credential reaches systemd there as it
-does locally.
+Confirmed on GitHub (first push, 2026-10-03): the build and both boot tests
+passed on hosted runners in about 31 minutes in total, without caches. KVM
+works there, and the SMBIOS credential reaches systemd as it does locally.
 
 ## Phase 3: v0.1 toolkit, CLI and GUI (v0.1.0)
 
@@ -383,16 +383,23 @@ Found along the way:
 - GitHub's newer `uses: $/...` form for local workflows is not accepted by
   actionlint 1.7.12 yet; `./` is used with a documented zizmor exception.
 
-Left for the maintainer, in order (docs/operations/releasing.md):
+Release of v0.1.0 (2026-10-05):
 
-1. Create `AbyssalOath/abyssal-sanctum` and push `main`. Then check the
-   first CI and Build ISO runs on hosted runners (time, disk, KVM, the
-   self-test credential).
-2. Set up the `release` environment with a required reviewer, a `v*` tag
-   ruleset, and branch protection for `main`.
-3. Work through the release checklist on real hardware.
-4. `scripts/release/prepare.sh 0.1.0`, merge, tag `v0.1.0`.
-5. Upload the ISO and sources, then publish the draft release.
+- Tagged `v0.1.0` on `0749ea8`. The Release workflow built and boot-tested
+  the ISO from the tag. The attest step first failed because the
+  repository was private (attestations need a public repository), and
+  passed once it was public.
+- Hardware checklist, on one UEFI machine with NVMe, Wi-Fi and Ethernet:
+  - Every boot check passed: `dd` USB, Ventoy, safe graphics, copy to RAM,
+    banner and `sanctum selftest`, Memtest86+.
+  - Every hardware, desktop and safety check passed: Fast Startup volume
+    refuses a read-write mount, no internal disk mounted.
+- Not tested on hardware:
+  - Legacy BIOS (no machine available; covered by the SeaBIOS boot test
+    in CI).
+  - BitLocker unlock (no BitLocker volume on the test machine).
+
+  Both are listed as known limitations in the release notes.
 
 ---
 

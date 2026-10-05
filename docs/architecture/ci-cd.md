@@ -43,7 +43,8 @@ built from (`build/`, `scripts/build/`, `scripts/test/`, `tests/fixtures/`,
 `crates/`, `catalog/`, `docs/`, `assets/`, Cargo files, `VERSION`), and on
 manual dispatch.
 
-1. **Build** (about 15-25 minutes on a hosted runner):
+1. **Build** (the first run, without caches, took about 31 minutes
+   including both boot tests):
    - Free disk space.
    - Restore the pacman package cache (keyed by snapshot date and package
      lists) and the Rust toolchain and crate cache (keyed by

@@ -12,6 +12,10 @@ manifest and the download link
 
 Before the first release, in the GitHub repository settings:
 
+0. **Visibility:** the repository must be **public**. GitHub creates build
+   provenance attestations only for public repositories (or private ones on
+   GitHub Enterprise Cloud); in a private repository the attest step fails.
+
 1. **Environments:** create an environment named `release`, and add yourself
    as a required reviewer. The publishing job then waits for your approval.
 2. **Rules:** add a tag ruleset for `v*` so only maintainers can create,

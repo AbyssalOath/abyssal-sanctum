@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-Abyssal Sanctum has not had a release yet. Once it has, only the latest
-release is supported. Arch Linux is a rolling distribution, so old ISOs
-contain old packages: always use the newest release.
+Only the latest release is supported. Arch Linux is a rolling
+distribution, so old ISOs contain old packages: always use the newest
+release.
 
 ## Reporting a vulnerability
 

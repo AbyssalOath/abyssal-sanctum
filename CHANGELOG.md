@@ -6,6 +6,12 @@ All notable changes to Abyssal Sanctum are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Docs: release attestations need a public repository; CI timings measured
+  on GitHub's runners; v0.1.0 hardware test results recorded in the
+  roadmap.
+
 ## [0.1.0] - 2026-10-03
 
 ### Added
