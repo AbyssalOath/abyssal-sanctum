@@ -18,6 +18,41 @@ docs = "recovery/disk-diagnostics"
 also = ["hardware"]
 
 [[tool]]
+id = "sanctum-targets"
+name = "Find installed systems"
+package = "sanctum"
+command = "sanctum"
+risk = "read-only"
+summary = "Find Windows and Linux installations, encrypted volumes and hibernated Windows"
+note = "Looks inside filesystems through a private read-only mount with journal replay disabled; nothing is written."
+usage = ["sanctum targets", "sanctum targets --json"]
+docs = "security/offline-malware-scanning"
+also = ["recovery", "security", "windows", "linux"]
+
+[[tool]]
+id = "sanctum-mount"
+name = "Mount a target safely"
+package = "sanctum"
+command = "sanctum"
+risk = "modifies"
+summary = "Mount a partition read-only (BitLocker and LUKS unlocked first); read-write only on request"
+note = "Read-write asks you to type the device name, and is refused for a hibernated Windows volume."
+usage = ["sanctum mount /dev/sda3", "sanctum mount --rw /dev/sda3", "sanctum umount --all"]
+docs = "recovery/filesystems"
+also = ["windows", "linux", "forensics"]
+
+[[tool]]
+id = "sanctum-data"
+name = "Data partition"
+package = "sanctum"
+command = "sanctum"
+risk = "destructive"
+summary = "Keep databases, reports and quarantine across reboots on a disk labelled SANCTUM_DATA"
+note = "status only reads; init erases the disk you name, after you type its name."
+usage = ["sanctum data status", "sanctum data init /dev/sdX"]
+docs = "getting-started/data-partition"
+
+[[tool]]
 id = "lsblk"
 name = "lsblk"
 package = "util-linux"

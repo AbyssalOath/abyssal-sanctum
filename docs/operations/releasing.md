@@ -3,10 +3,15 @@
 How a version of Sanctum is released. The design and the reasons are in
 [ADR-0009](../architecture/decisions/0009-release-integrity.md).
 
-ISOs are hosted on SourceForge or the project site, and uploaded by hand.
-The GitHub release holds the checksum, the source manifest, the package
-manifest and the download link
+ISOs under 2 GiB are attached to the GitHub release by hand; larger ones go
+to [SourceForge](https://sourceforge.net/projects/abyssal-sanctum/files/),
+with a download link in the release. The package sources (GPL) always go to
+SourceForge, under `sources/vX.Y.Z/`: they are tens of GB, and single
+tarballs exceed GitHub's 2 GiB asset limit. The GitHub release also holds
+the checksums, the source manifest and the package manifest
 ([ADR-0005](../architecture/decisions/0005-iso-hosting-and-size-budget.md)).
+From v0.2.0, the maintainer also signs the ISO for Secure Boot
+([ADR-0011](../architecture/decisions/0011-secure-boot-shim-mok.md)).
 
 ## One-time repository setup
 
@@ -89,17 +94,66 @@ The Release workflow then:
    `makepkg --allsource`. This takes a few hours and several GB. The script
    can be stopped and restarted; finished tarballs are kept. Anything it
    could not collect is listed in `MISSING.txt`. Run it again for those
-   (`... sources-vX.Y.Z/ PKGBASE ...`), or fix the cause by hand.
-4. Upload to the download host: the ISO, its `.sha256`, and the
-   `sources-vX.Y.Z/` directory.
-5. Download the ISO again from the host and run `sha256sum -c` once more.
+   (`... sources-vX.Y.Z/ PKGBASE ...`): network trouble often clears. When a
+   file has vanished upstream, the script tries the Internet Archive's copy;
+   makepkg accepts it only if it matches the PKGBUILD's checksum. What is
+   left needs a person: look for the exact file elsewhere (Fedora's source
+   cache, Software Heritage for git commits, the commit a moved tag used to
+   point at), or, as a last resort, an equivalent source of the same
+   version. Record every such case in `SOURCE-NOTES.txt` in the sources
+   directory. v0.1.0's notes show examples. Once `MISSING.txt` is resolved,
+   write the checksums: `(cd sources-vX.Y.Z && sha256sum -- *.src.tar.gz >SHA256SUMS)`.
+4. Sign it for Secure Boot, on your own machine, with the key from the
+   offline store (asks for the key's passphrase):
+
+   ```bash
+   scripts/release/sign-secureboot.sh \
+     --key /path/to/sanctum-sb.key --cert /path/to/sanctum-sb.crt \
+     abyssal-sanctum-vX.Y.Z-x86_64.iso
+   ```
+
+   This writes `abyssal-sanctum-vX.Y.Z-x86_64-secureboot.iso`, its
+   `.sha256`, and `abyssal-sanctum-vX.Y.Z-x86_64-secureboot.txt`, which
+   records the unsigned ISO's SHA-256 and the certificate's fingerprints.
+   Running it again gives the same file. Boot the signed ISO with Secure
+   Boot on (`scripts/test/run-vm.sh --secureboot --vars sb.fd
+   abyssal-sanctum-vX.Y.Z-x86_64-secureboot.iso`), enrol the key, check
+   `sanctum secureboot status`, and remove the key with
+   `sanctum secureboot forget`.
+5. Attach to the draft GitHub release: the signed ISO (the recommended
+   download) with its `.sha256` and `-secureboot.txt`, and the unsigned ISO
+   and its `.sha256`, which the attestation covers. An ISO over 2 GiB goes
+   to SourceForge instead (`/home/frs/project/abyssal-sanctum/vX.Y.Z/`).
+6. Upload the sources to SourceForge with your SSH key (added under
+   SourceForge's Account Settings, SSH Settings). SourceForge's rsync cannot
+   create more than one new folder level, so create the folder first:
+
+   ```bash
+   printf 'mkdir /home/frs/project/abyssal-sanctum/sources/vX.Y.Z\n' \
+     | sftp -b - USER@frs.sourceforge.net
+   rsync -avP --partial sources-vX.Y.Z/ \
+     USER@frs.sourceforge.net:/home/frs/project/abyssal-sanctum/sources/vX.Y.Z/
+   ```
+
+   Rerun the `rsync` if the connection drops; it resumes. The SourceForge
+   page should show every tarball plus `SHA256SUMS` and
+   `SOURCE-NOTES.txt`.
+7. Download the ISOs again and run `sha256sum -c` once more.
+
+The first time, create the key with
+`scripts/release/make-secureboot-key.sh DIR` and keep `DIR` offline, with a
+backup. Never put the key in the repository or in CI.
 
 ## 5. Publish
 
-1. Edit the draft release on GitHub: replace "DOWNLOAD LINK" with the ISO's
-   address on the download host, and add a link to the sources directory.
+1. Edit the draft release on GitHub. The Sources section already links to
+   `https://sourceforge.net/projects/abyssal-sanctum/files/sources/vX.Y.Z/`;
+   check that it opens. If an ISO went to SourceForge, add its link to the
+   Download section.
 2. Add a "Tested on" line from the hardware checklist.
-3. Publish the release.
+3. Add the Secure Boot certificate's SHA-1 and SHA-256 fingerprints from the
+   `-secureboot.txt` file. Technicians compare the SHA-1 in MokManager.
+4. Publish the release.
 
 ## If something goes wrong
 

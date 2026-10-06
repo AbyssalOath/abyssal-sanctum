@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2317,SC2329 # check_* functions are called through check()
+# sanctum-scantest: end-to-end test of `sanctum targets`, `mount`, `update`
+# and `scan` against the test disks in tests/fixtures/scan (AV-1). CI runs
+# it at boot through the sanctum.scantest credential (scripts/test/
+# boot-test.sh --scan); it is not useful on a real machine.
+#
+# Expects three disks: WINTEST (NTFS, hibernated, EICAR in a file and in an
+# alternate data stream), LINUXTEST (ext4, EICAR in one file) and the
+# SANCTUM_DATA partition with a test signature. Prints one line per check
+# and SANCTUM-SCANTEST: PASS or FAIL, then powers off.
+
+set -uo pipefail
+
+exec > >(tee -a /dev/ttyS0 2>/dev/null) 2>&1
+
+failures=0
+check() {
+	local name=$1 reason
+	if reason=$("$2" 2>&1); then
+		printf 'ok - %s\n' "${name}"
+	else
+		reason=${reason//$'\n'/; }
+		printf 'not ok - %s: %s\n' "${name}" "${reason:-failed}"
+		failures=$((failures + 1))
+	fi
+}
+
+# Wait for start-up to finish, as sanctum-selftest does.
+for _ in $(seq 180); do
+	systemctl list-jobs --no-legend | grep -qv sanctum-scantest || break
+	sleep 1
+done
+
+win=$(blkid -L WINTEST)
+lin=$(blkid -L LINUXTEST)
+win_dir=/mnt/sanctum/$(basename "$(readlink -f "${win}")")
+lin_dir=/mnt/sanctum/$(basename "$(readlink -f "${lin}")")
+
+check_fixtures() {
+	[[ -b ${win} && -b ${lin} ]] || {
+		echo "test disks not found (WINTEST=${win}, LINUXTEST=${lin})"
+		return 1
+	}
+}
+
+check_data_partition() {
+	local _
+	for _ in $(seq 30); do
+		findmnt -rn --mountpoint /sanctum >/dev/null && break
+		sleep 1
+	done
+	findmnt -rn -o OPTIONS --mountpoint /sanctum | grep -q noexec
+}
+
+check_update_status() {
+	sanctum update --status | grep -q sanctum-test.hdb
+}
+
+check_targets() {
+	local json
+	json=$(sanctum targets --json) || return 1
+	grep -q '"kind": "windows"' <<<"${json}" || {
+		echo "Windows not found"
+		return 1
+	}
+	grep -q '"hibernated": true' <<<"${json}" || {
+		echo "hibernation not detected"
+		return 1
+	}
+	grep -q '"os": "Test Linux 1.0"' <<<"${json}" || {
+		echo "Linux not found"
+		return 1
+	}
+}
+
+check_rw_refused_when_hibernated() {
+	local out
+	if out=$(sanctum mount --rw --yes "${win}" 2>&1); then
+		echo "a hibernated NTFS volume was mounted read-write"
+		sanctum umount --all
+		return 1
+	fi
+	grep -q hibernated <<<"${out}" || {
+		echo "refused for the wrong reason: ${out}"
+		return 1
+	}
+}
+
+check_mount_read_only() {
+	sanctum mount "${win}" >/dev/null || return 1
+	sanctum mount "${lin}" >/dev/null || return 1
+	local dir
+	for dir in "${win_dir}" "${lin_dir}"; do
+		findmnt -rn -o OPTIONS --mountpoint "${dir}" | grep -q '^ro' || {
+			echo "${dir} is not mounted read-only"
+			return 1
+		}
+	done
+	[[ $(blockdev --getro "${win}") == 1 ]] || {
+		echo "the block device is not read-only"
+		return 1
+	}
+}
+
+check_scan() {
+	local code report
+	sanctum scan --case scantest "${win_dir}" "${lin_dir}"
+	code=$?
+	[[ ${code} == 1 ]] || {
+		echo "exit status ${code}, expected 1 (threats found)"
+		return 1
+	}
+	report=$(find /sanctum/cases -maxdepth 1 -name '*-scantest' | sort | tail -n 1)/report.json
+	[[ -s ${report} && -s ${report%.json}.html ]] || {
+		echo "no report on the data partition"
+		return 1
+	}
+	[[ $(grep -c '"signature": "Sanctum.Test.EICAR' "${report}") == 3 ]] || {
+		echo "expected 3 detections: $(grep '"path"' "${report}" | tr -d ' ')"
+		return 1
+	}
+	grep -q '"stream": "payload"' "${report}" || {
+		echo "the alternate data stream was not detected"
+		return 1
+	}
+	grep -q '"sha256": "' "${report}" || {
+		echo "findings have no hashes"
+		return 1
+	}
+}
+
+check_umount() {
+	sanctum umount --all >/dev/null || return 1
+	! findmnt -rn -o TARGET | grep -q '^/mnt/sanctum' || {
+		echo "still mounted"
+		return 1
+	}
+	[[ $(blockdev --getro "${win}") == 0 ]] || {
+		echo "the read-only flag Sanctum set was not removed"
+		return 1
+	}
+}
+
+printf 'SANCTUM-SCANTEST: start\n'
+check "test disks present" check_fixtures
+check "data partition mounted at /sanctum" check_data_partition
+check "update --status lists the test database" check_update_status
+check "targets finds Windows (hibernated) and Linux" check_targets
+check "read-write mount refused for hibernated Windows" check_rw_refused_when_hibernated
+check "targets mounted read-only" check_mount_read_only
+check "scan finds file, stream and Linux detections" check_scan
+check "umount cleans up" check_umount
+
+if ((failures == 0)); then
+	printf 'SANCTUM-SCANTEST: PASS\n'
+else
+	printf 'SANCTUM-SCANTEST: FAIL (%d failed)\n' "${failures}"
+fi
+sync
+sleep 1
+systemctl poweroff --no-block

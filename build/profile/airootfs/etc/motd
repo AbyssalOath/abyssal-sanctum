@@ -8,6 +8,9 @@
 
   Tools     sanctum            menu of every tool, by category, with risks
             sanctum disks      read-only overview of disks and SMART health
+  Malware   sanctum targets    find installed systems (Windows, Linux)
+            sanctum mount DEV  read-only mount (BitLocker asks for the key)
+            sanctum scan DIR   ClamAV scan with a report; sanctum update first
             sanctum docs       guides (also in Firefox on the desktop)
   Desktop   startx
   Network   Wired DHCP connects automatically. Wi-Fi and settings: nmtui

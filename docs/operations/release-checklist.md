@@ -29,6 +29,16 @@ At least one of each. One machine can count for several rows.
 | "copy to RAM" boots, and the USB can be removed afterwards | |
 | The console shows the Sanctum banner; `sanctum selftest` passes | |
 
+## Secure Boot (signed ISO, from v0.2.0)
+
+| Check | Result |
+| --- | --- |
+| With Secure Boot on, the signed ISO opens MokManager; `sanctum.cer` enrols and its SHA-1 matches the release notes | |
+| After enrolment, Sanctum boots with Secure Boot on; `sanctum secureboot status` shows "on" and the key enrolled | |
+| `sanctum secureboot forget`, then a reboot from the stick, removes the key; Sanctum is refused again | |
+| On a BitLocker machine: after booting Sanctum with Secure Boot on, enrolling and removing the key, Windows starts without asking for the recovery key | |
+| Memtest86+ starts with Secure Boot on | |
+
 ## Hardware
 
 | Check | Result |

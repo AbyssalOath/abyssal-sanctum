@@ -15,6 +15,8 @@ changes gets a new record that supersedes the old one.
 | [0007](0007-gui-stack.md) | GUI stack: Xfce on Xorg via startx | Accepted |
 | [0008](0008-rust-components.md) | Rust components | Accepted |
 | [0009](0009-release-integrity.md) | Release integrity | Accepted |
+| [0010](0010-targets-mounting-data-partition.md) | Inspecting targets, mounting them, and the data partition | Accepted |
+| [0011](0011-secure-boot-shim-mok.md) | Secure Boot through a signed shim and a Sanctum machine owner key | Accepted |
 
 Planned (see [ROADMAP.md](../../../ROADMAP.md)): Warden and Arsenal
 interfaces.

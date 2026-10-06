@@ -27,7 +27,8 @@ mount -t ntfs-3g -o ro /dev/mapper/windows /mnt/windows
 
 Drop `--readonly` and `-o ro` only if you must write. Remember that turning
 Secure Boot off to boot Sanctum makes Windows ask for this key on its next
-boot.
+boot; a signed release can boot with Secure Boot on instead
+([Secure Boot](../getting-started/secure-boot.md)).
 
 ## Mounting the Windows volume
 

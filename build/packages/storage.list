@@ -28,6 +28,7 @@ partclone            # Back up and restore used blocks of a filesystem
 fsarchiver           # File-level filesystem backup and restore
 clonezilla           # Guided disk and partition cloning (uses partclone)
 efibootmgr           # Inspect and repair UEFI boot entries
+mokutil              # Secure Boot machine owner keys: sanctum secureboot forget removes the Sanctum key
 grub                 # Reinstall the GRUB boot loader on a broken Linux system
 rsync                # Copy and back up files with verification
 ntfs-3g              # NTFS mounting that refuses read-write on hibernated (Fast Startup) volumes

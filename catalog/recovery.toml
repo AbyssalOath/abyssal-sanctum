@@ -70,3 +70,16 @@ usage = [
 check = ["efibootmgr", "--version"]
 docs = "recovery/windows"
 also = ["windows", "linux"]
+
+[[tool]]
+id = "sanctum-secureboot"
+name = "Secure Boot key"
+package = "sanctum"
+command = "sanctum"
+risk = "modifies"
+summary = "Show Secure Boot state, and remove the Sanctum key from a machine after work with Secure Boot on"
+note = "forget only requests the removal; it happens after a reboot, when you confirm it in MokManager."
+usage = ["sanctum secureboot status", "sanctum secureboot forget"]
+check = ["mokutil", "--version"]
+docs = "getting-started/secure-boot"
+also = ["windows"]

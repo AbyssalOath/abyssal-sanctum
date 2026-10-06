@@ -9,6 +9,14 @@
 #      "no disks mounted" with those disks present, and
 #   2. the guest powers off within the time limit, and
 #   3. every fixture is byte-for-byte unchanged afterwards (ADR-0006).
+#
+# With --scan, the ISO boots with sanctum-scantest instead, and the scan
+# fixtures (tests/fixtures/scan): a hibernated Windows NTFS volume and a
+# Linux ext4 volume, both carrying the EICAR test file, and a data partition
+# with a test signature. The test passes when the scan test prints
+# "SANCTUM-SCANTEST: PASS", the Windows and Linux images are unchanged (they
+# were only ever mounted read-only), and the scan report is on the data
+# partition.
 
 set -Eeuo pipefail
 
@@ -26,13 +34,15 @@ self-test and the disk-safety fixtures, and check the results.
 Options:
   --uefi             Boot with OVMF firmware (default)
   --bios             Boot with legacy BIOS (SeaBIOS)
+  --scan             Run the scan test (sanctum-scantest) instead
   --timeout SECONDS  Give up after this long (default: 300)
-  --log FILE         Serial log path (default: out/boot-test-<firmware>.log)
+  --log FILE         Serial log (default: out/boot-test-<firmware>-<mode>.log)
   -h, --help         Show this help
 EOF
 }
 
 firmware=uefi
+mode=selftest
 timeout_s=300
 log=""
 iso=""
@@ -41,6 +51,7 @@ while (($#)); do
 	case $1 in
 	--uefi) firmware=uefi ;;
 	--bios) firmware=bios ;;
+	--scan) mode=scantest ;;
 	--timeout)
 		[[ $# -ge 2 && $2 =~ ^[0-9]+$ ]] || die "--timeout needs a number of seconds"
 		timeout_s=$2
@@ -66,31 +77,39 @@ done
 
 [[ -n ${iso} ]] || iso="${repo_root}/out/abyssal-sanctum-v$(read_version "${repo_root}")-x86_64.iso"
 [[ -f ${iso} ]] || die "ISO not found: ${iso}"
-[[ -n ${log} ]] || log="${repo_root}/out/boot-test-${firmware}.log"
+[[ -n ${log} ]] || log="${repo_root}/out/boot-test-${firmware}-${mode}.log"
 mkdir -p -- "$(dirname -- "${log}")"
 for tool in xz sha256sum timeout; do
 	command -v "${tool}" >/dev/null || die "missing dependency: ${tool}"
 done
 
-fixtures_dir="${repo_root}/tests/fixtures/disk-safety"
 tmp=$(mktemp -d)
 trap 'rm -rf -- "${tmp}"' EXIT
 
+# Disks whose hashes must not change, and (scan test) the data partition,
+# which Sanctum writes to on purpose.
 disk_args=()
-for fixture in "${fixtures_dir}"/*.img.xz; do
+if [[ ${mode} == selftest ]]; then
+	fixtures=("${repo_root}"/tests/fixtures/disk-safety/*.img.xz)
+else
+	fixtures=("${repo_root}"/tests/fixtures/scan/windows.img.xz "${repo_root}"/tests/fixtures/scan/linux.img.xz)
+	xz -dc -- "${repo_root}/tests/fixtures/scan/data.img.xz" >"${tmp}/data.disk"
+fi
+for fixture in "${fixtures[@]}"; do
+	[[ -f ${fixture} ]] || die "fixture not found: ${fixture}"
 	image="${tmp}/$(basename -- "${fixture}" .xz)"
 	xz -dc -- "${fixture}" >"${image}"
 	disk_args+=(--writable-disk "${image}")
 done
-((${#disk_args[@]})) || die "no fixtures found in ${fixtures_dir}"
+[[ ${mode} == selftest ]] || disk_args+=(--writable-disk "${tmp}/data.disk")
 (cd -- "${tmp}" && sha256sum -- *.img >before.sha256)
 
 rm -f -- "${log}"
-msg "Boot test (${firmware^^}): $(basename -- "${iso}"), up to ${timeout_s}s"
+msg "Boot test (${firmware^^}, ${mode}): $(basename -- "${iso}"), up to ${timeout_s}s"
 vm_status=0
 # Without --foreground, timeout kills the whole process group, QEMU included.
 timeout "${timeout_s}" \
-	"${repo_root}/scripts/test/run-vm.sh" "--${firmware}" --selftest "${log}" \
+	"${repo_root}/scripts/test/run-vm.sh" "--${firmware}" "--${mode}" "${log}" \
 	"${disk_args[@]}" "${iso}" >"${tmp}/qemu.out" 2>&1 || vm_status=$?
 
 failed=0
@@ -105,21 +124,33 @@ fi
 
 # Self-test output, without the rest of the boot log. The serial console
 # carries terminal escape codes, so strip carriage returns first.
-results=$(tr -d '\r' <"${log}" 2>/dev/null | grep -aE '^(ok|not ok) - |^SANCTUM-SELFTEST:' || true)
+marker=SANCTUM-${mode^^}
+results=$(tr -d '\r' <"${log}" 2>/dev/null | grep -aE "^(ok|not ok) - |^${marker}:" || true)
 if [[ -n ${results} ]]; then
 	printf '%s\n' "${results}"
 fi
-if ! grep -q '^SANCTUM-SELFTEST: PASS$' <<<"${results}"; then
-	warn "the self-test did not pass (full serial log: ${log})"
+if ! grep -q "^${marker}: PASS$" <<<"${results}"; then
+	warn "the ${mode} did not pass (full serial log: ${log})"
 	failed=1
+fi
+
+# The scan report must have reached the data partition (read without
+# mounting, with debugfs from e2fsprogs).
+if [[ ${mode} == scantest ]] && command -v debugfs >/dev/null; then
+	if debugfs -R 'ls -p /cases' "${tmp}/data.disk" 2>/dev/null | grep -q -- '-scantest/'; then
+		msg "Scan report found on the data partition"
+	else
+		warn "no scan report on the data partition"
+		failed=1
+	fi
 fi
 
 if ! (cd -- "${tmp}" && sha256sum --quiet -c before.sha256); then
-	warn "a disk-safety fixture was modified during the boot"
+	warn "a fixture was modified during the boot"
 	failed=1
 else
-	msg "Disk-safety fixtures unchanged"
+	msg "Fixtures unchanged"
 fi
 
-((failed == 0)) || die "boot test failed (${firmware^^})"
-msg "Boot test passed (${firmware^^})"
+((failed == 0)) || die "boot test failed (${firmware^^}, ${mode})"
+msg "Boot test passed (${firmware^^}, ${mode})"

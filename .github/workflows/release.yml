@@ -6,9 +6,10 @@
 #   3. publish: a build provenance attestation for the ISO, then a draft
 #      GitHub release with the checksum, source manifest and package manifest
 #
-# The ISO itself is not attached: it is hosted on SourceForge or the project
-# site (ADR-0005). The maintainer downloads it from this run's artifacts,
-# verifies it, uploads it, adds the download link and publishes the draft.
+# The ISO itself is not attached by the workflow (ADR-0005). The maintainer
+# downloads it from this run's artifacts, verifies it, signs a Secure Boot
+# copy offline (ADR-0011), attaches both (or uploads to SourceForge if over
+# 2 GiB), uploads the package sources to SourceForge, and publishes the draft.
 name: Release
 
 on:

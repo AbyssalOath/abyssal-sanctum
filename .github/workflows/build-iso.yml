@@ -116,7 +116,7 @@ jobs:
           compression-level: 0
 
   boot-test:
-    name: Boot test (${{ matrix.firmware }})
+    name: Boot test (${{ matrix.firmware }}, ${{ matrix.mode }})
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -125,7 +125,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        firmware: [uefi, bios]
+        include:
+          - firmware: uefi
+            mode: selftest
+          - firmware: bios
+            mode: selftest
+          # targets, mount, update and scan against the scan fixtures (AV-1)
+          - firmware: uefi
+            mode: scan
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -156,13 +163,19 @@ jobs:
       - name: Boot test
         env:
           FIRMWARE: ${{ matrix.firmware }}
-        run: scripts/test/boot-test.sh "--${FIRMWARE}" --log "out/boot-test-${FIRMWARE}.log"
+          MODE: ${{ matrix.mode }}
+        run: |
+          args=("--${FIRMWARE}" --log "out/boot-test-${FIRMWARE}-${MODE}.log")
+          if [[ ${MODE} == scan ]]; then
+            args+=(--scan --timeout 420)
+          fi
+          scripts/test/boot-test.sh "${args[@]}"
 
       - name: Upload serial log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: boot-test-${{ matrix.firmware }}
-          path: out/boot-test-${{ matrix.firmware }}.log
+          name: boot-test-${{ matrix.firmware }}-${{ matrix.mode }}
+          path: out/boot-test-${{ matrix.firmware }}-${{ matrix.mode }}.log
           if-no-files-found: ignore
           retention-days: 7

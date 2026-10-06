@@ -28,7 +28,9 @@ file_permissions=(
 	["/root"]="0:0:750"
 	["/root/.gnupg"]="0:0:700"
 	["/usr/local/bin/livecd-sound"]="0:0:755"
+	["/usr/lib/abyssal-sanctum/probe-fs"]="0:0:755"
 	["/usr/local/bin/sanctum"]="0:0:755"
 	["/usr/local/bin/sanctum-desktop-setup"]="0:0:755"
+	["/usr/local/bin/sanctum-scantest"]="0:0:755"
 	["/usr/local/bin/sanctum-selftest"]="0:0:755"
 )

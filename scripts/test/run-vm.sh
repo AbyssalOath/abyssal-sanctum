@@ -21,6 +21,10 @@ Boot ISO (default: out/abyssal-sanctum-v<VERSION>-x86_64.iso) in QEMU.
 Options:
   --uefi             Boot with OVMF firmware (default)
   --bios             Boot with legacy BIOS (SeaBIOS)
+  --secureboot       Boot with OVMF with Secure Boot on and Microsoft's
+                     keys enrolled (as on most PCs)
+  --vars FILE        Keep the UEFI variables (boot entries, enrolled MOK
+                     keys) in FILE across boots; created on first use
   --disk IMAGE       Attach a disk image; writes go to a throwaway snapshot
   --writable-disk IMAGE
                      Attach a disk image directly; writes reach the file
@@ -30,14 +34,18 @@ Options:
   --selftest LOG     Run sanctum-selftest at boot (passed as a systemd
                      credential), write the serial console to LOG, no
                      window; QEMU exits when the guest powers off
+  --scantest LOG     The same for sanctum-scantest (needs the scan fixtures)
   -h, --help         Show this help
 EOF
 }
 
 firmware=uefi
+secureboot=0
+vars_file=""
 memory=4096
 headless=0
 selftest_log=""
+test_credential=sanctum.selftest
 disks=()
 writable_disks=()
 iso=""
@@ -46,6 +54,15 @@ while (($#)); do
 	case $1 in
 	--uefi) firmware=uefi ;;
 	--bios) firmware=bios ;;
+	--secureboot)
+		firmware=uefi
+		secureboot=1
+		;;
+	--vars)
+		[[ $# -ge 2 ]] || die "--vars needs a file path"
+		vars_file=$2
+		shift
+		;;
 	--disk)
 		[[ $# -ge 2 ]] || die "--disk needs an image path"
 		[[ -f $2 ]] || die "disk image not found: $2"
@@ -64,9 +81,10 @@ while (($#)); do
 		shift
 		;;
 	--headless) headless=1 ;;
-	--selftest)
-		[[ $# -ge 2 ]] || die "--selftest needs a log file path"
+	--selftest | --scantest)
+		[[ $# -ge 2 ]] || die "$1 needs a log file path"
 		selftest_log=$2
+		test_credential=sanctum.${1#--}
 		shift
 		;;
 	-h | --help)
@@ -88,9 +106,16 @@ fi
 [[ -f ${iso} ]] || die "ISO not found: ${iso} (build it with scripts/build/build-iso.sh)"
 command -v qemu-system-x86_64 >/dev/null || die "qemu-system-x86_64 is not installed"
 
+machine=q35
+mode=${firmware^^}
+if ((secureboot)); then
+	machine+=",smm=on"
+	mode+=", Secure Boot"
+fi
+
 # shellcheck disable=SC2054 # commas are QEMU option syntax
 args=(
-	-machine q35
+	-machine "${machine}"
 	-m "${memory}"
 	-smp 2
 	-device virtio-net-pci,netdev=net0
@@ -112,12 +137,22 @@ for i in "${!writable_disks[@]}"; do
 done
 
 if [[ ${firmware} == uefi ]]; then
-	# OVMF locations on Fedora, Arch and Debian/Ubuntu.
+	# OVMF locations on Fedora, Arch and Debian/Ubuntu. The Secure Boot
+	# variants come with Microsoft's keys enrolled.
 	code="" vars_template=""
-	for pair in \
-		/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd \
-		/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd \
-		/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd; do
+	pairs=(
+		/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd
+		/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd
+		/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd
+	)
+	if ((secureboot)); then
+		pairs=(
+			/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd:/usr/share/edk2/ovmf/OVMF_VARS.secboot.fd
+			/usr/share/edk2/x64/OVMF_CODE.secboot.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd
+			/usr/share/OVMF/OVMF_CODE_4M.ms.fd:/usr/share/OVMF/OVMF_VARS_4M.ms.fd
+		)
+	fi
+	for pair in "${pairs[@]}"; do
 		if [[ -f ${pair%%:*} && -f ${pair##*:} ]]; then
 			code=${pair%%:*}
 			vars_template=${pair##*:}
@@ -125,23 +160,40 @@ if [[ ${firmware} == uefi ]]; then
 		fi
 	done
 	[[ -n ${code} ]] || die "OVMF firmware not found (Fedora: dnf install edk2-ovmf)"
-	vars=$(mktemp --suffix=.fd)
-	trap 'rm -f -- "${vars}"' EXIT
-	cp -- "${vars_template}" "${vars}"
+	if [[ -n ${vars_file} ]]; then
+		[[ -f ${vars_file} ]] || cp -- "${vars_template}" "${vars_file}"
+		vars=${vars_file}
+	else
+		vars=$(mktemp --suffix=.fd)
+		trap 'rm -f -- "${vars}"' EXIT
+		cp -- "${vars_template}" "${vars}"
+	fi
+	if ((secureboot)); then
+		# Secure Boot needs the variable store protected by SMM.
+		# shellcheck disable=SC2054 # commas are QEMU option syntax
+		args+=(-global driver=cfi.pflash01,property=secure,value=on)
+	fi
 	args+=(
 		-drive "if=pflash,format=raw,unit=0,readonly=on,file=${code}"
 		-drive "if=pflash,format=raw,unit=1,file=${vars}"
 	)
 fi
 
+# A window needs a graphical session; over SSH there is none, and QEMU's
+# own error ("gtk initialization failed") does not say what to do.
+if [[ -z ${selftest_log} ]] && ((! headless)) && [[ -z ${DISPLAY:-}${WAYLAND_DISPLAY:-} ]]; then
+	die "no graphical display (an SSH session?): add --headless, then use the monitor socket, or run where a desktop is available"
+fi
+
 if [[ -n ${selftest_log} ]]; then
 	# systemd imports SMBIOS type 11 strings as system credentials in VMs;
-	# sanctum-selftest.service starts when this one is present.
+	# sanctum-selftest.service (or sanctum-scantest.service) starts when its
+	# credential is present.
 	args+=(
 		-display none
 		-serial "file:${selftest_log}"
 		-no-reboot
-		-smbios "type=11,value=io.systemd.credential:sanctum.selftest=1"
+		-smbios "type=11,value=io.systemd.credential:${test_credential}=1"
 	)
 elif ((headless)); then
 	monitor="${repo_root}/out/vm-monitor.sock"
@@ -149,5 +201,5 @@ elif ((headless)); then
 	msg "Monitor socket: ${monitor}"
 fi
 
-msg "Booting $(basename -- "${iso}") (${firmware^^}, ${memory} MiB)"
+msg "Booting $(basename -- "${iso}") (${mode}, ${memory} MiB)"
 qemu-system-x86_64 "${args[@]}"

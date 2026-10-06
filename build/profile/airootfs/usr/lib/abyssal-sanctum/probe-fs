@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# probe-fs: report what a filesystem contains (a Windows or Linux
+# installation, hibernation state) without changing it. Used by
+# `sanctum targets` (ADR-0010).
+#
+# Usage: probe-fs --device DEVICE FSTYPE   (run inside `unshare --mount`)
+#        probe-fs --path DIR               (an already-mounted filesystem)
+#
+# With --device, the filesystem is mounted read-only with journal replay
+# disabled, in the caller's private mount namespace, so the mount is never
+# visible to the rest of the system and disappears when this script exits.
+#
+# Output: key=value lines (kind, os, version, build, hibernated, root,
+# error). Values never contain newlines.
+
+set -uo pipefail
+
+emit() {
+	local value=${2//$'\n'/ }
+	printf '%s=%s\n' "$1" "${value//$'\r'/}"
+}
+
+inspect() {
+	local root=$1 sub dir
+
+	# Windows: the system folder and registry are enough to recognise it.
+	if [[ -d ${root}/Windows/System32/config ]]; then
+		emit kind windows
+		local hive=${root}/Windows/System32/config/SOFTWARE key='\Microsoft\Windows NT\CurrentVersion'
+		if [[ -s ${hive} ]] && command -v hivexget >/dev/null; then
+			emit os "$(hivexget "${hive}" "${key}" ProductName 2>/dev/null)"
+			emit version "$(hivexget "${hive}" "${key}" DisplayVersion 2>/dev/null)"
+			emit build "$(hivexget "${hive}" "${key}" CurrentBuildNumber 2>/dev/null)"
+		fi
+		# hiberfil.sys starts with "hibr" or "wake" (any case) while Windows
+		# is hibernated, including Fast Startup; otherwise it is zeroed.
+		if [[ -f ${root}/hiberfil.sys ]]; then
+			local magic
+			magic=$(head -c 4 -- "${root}/hiberfil.sys" 2>/dev/null | tr '[:upper:]' '[:lower:]')
+			case ${magic} in
+			hibr | wake) emit hibernated yes ;;
+			*) emit hibernated no ;;
+			esac
+		else
+			emit hibernated no
+		fi
+		return
+	fi
+
+	# Linux: os-release at the top, or in a common btrfs root subvolume.
+	for sub in "" @ @root root; do
+		dir=${root}${sub:+/${sub}}
+		for f in etc/os-release usr/lib/os-release; do
+			if [[ -f ${dir}/${f} ]]; then
+				emit kind linux
+				# Parsed as text, never sourced: the file belongs to the
+				# machine being investigated and may be hostile.
+				local name
+				name=$(sed -n 's/^PRETTY_NAME=//p' -- "${dir}/${f}" | head -n 1 | tr -d '"'\''\\`$')
+				emit os "${name:-Linux}"
+				emit root "/${sub}"
+				return
+			fi
+		done
+	done
+	emit kind data
+}
+
+case ${1:-} in
+--path)
+	[[ -d ${2:-} ]] || {
+		emit error "not a directory: ${2:-}"
+		exit 0
+	}
+	inspect "$2"
+	;;
+--device)
+	device=${2:-}
+	fstype=${3:-}
+	[[ -b ${device} ]] || {
+		emit error "not a block device: ${device}"
+		exit 0
+	}
+	mnt=$(mktemp -d /run/sanctum-probe.XXXXXX) || exit 1
+	trap 'umount -- "${mnt}" 2>/dev/null; rmdir -- "${mnt}" 2>/dev/null' EXIT
+	# shellcheck disable=SC2054 # commas are mount option syntax
+	case ${fstype} in
+	ext2 | ext3 | ext4) cmd=(mount -t "${fstype}" -o ro,noload) ;;
+	xfs) cmd=(mount -t xfs -o ro,norecovery) ;;
+	btrfs) cmd=(mount -t btrfs -o ro,rescue=nologreplay) ;;
+	f2fs) cmd=(mount -t f2fs -o ro,norecovery) ;;
+	ntfs) cmd=(ntfs-3g -o ro) ;;
+	vfat | exfat) cmd=(mount -t "${fstype}" -o ro) ;;
+	*)
+		emit kind unsupported
+		exit 0
+		;;
+	esac
+	# No "--" before the device: ntfs-3g does not accept it, and device
+	# paths always start with /dev/.
+	if ! out=$("${cmd[@]}" "${device}" "${mnt}" 2>&1); then
+		emit error "read-only mount failed: ${out}"
+		exit 0
+	fi
+	inspect "${mnt}"
+	;;
+*)
+	printf 'usage: %s --device DEVICE FSTYPE | --path DIR\n' "${0##*/}" >&2
+	exit 2
+	;;
+esac

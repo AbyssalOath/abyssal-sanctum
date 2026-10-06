@@ -1,0 +1,4 @@
+# Mount the Sanctum data partition when it appears (ADR-0010): an ext4
+# filesystem labelled SANCTUM_DATA. Nothing else is ever mounted
+# automatically (ADR-0006).
+SUBSYSTEM=="block", ACTION=="add|change", ENV{ID_FS_LABEL}=="SANCTUM_DATA", ENV{ID_FS_TYPE}=="ext4", ENV{SYSTEMD_WANTS}+="sanctum.mount"
