@@ -181,7 +181,7 @@ fi
 
 # A window needs a graphical session; over SSH there is none, and QEMU's
 # own error ("gtk initialization failed") does not say what to do.
-if [[ -z ${selftest_log} ]] && ((!headless)) && [[ -z ${DISPLAY:-}${WAYLAND_DISPLAY:-} ]]; then
+if [[ -z ${selftest_log} ]] && ((! headless)) && [[ -z ${DISPLAY:-}${WAYLAND_DISPLAY:-} ]]; then
 	die "no graphical display (an SSH session?): add --headless, then use the monitor socket, or run where a desktop is available"
 fi
 

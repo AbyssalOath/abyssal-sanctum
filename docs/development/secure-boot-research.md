@@ -158,8 +158,12 @@ OVMF with Secure Boot on and Microsoft's keys enrolled
 | Signing twice | Same ISO, byte for byte |
 | `sanctum secureboot status` and `forget` | Status correct before and after; forget plus MokManager removes the key |
 | Signed ISO with Secure Boot off (UEFI through shim, and BIOS) | Self-test passes |
-| Memtest86+ with Secure Boot on | Not tested: Memtest86+ shows a black screen under QEMU's SMM firmware even unsigned, so QEMU cannot tell. To verify on hardware |
+| Memtest86+ with Secure Boot on | Not testable in QEMU (black screen under the SMM firmware even unsigned); works on hardware, see below |
 
-Still to test on hardware (ADR-0011): at least two machines, one with
-BitLocker, checking that BitLocker unlocks normally after a Sanctum boot,
-an enrolment and a removal.
+Hardware, 2026-10-06 (the maintainer's UEFI test machine, no BitLocker),
+signed with the real release key: enrolment, boot with Secure Boot on and
+Memtest86+ work.
+
+Still to test on hardware (ADR-0011): a second machine, with BitLocker,
+checking that BitLocker unlocks normally after a Sanctum boot, an enrolment
+and a removal.

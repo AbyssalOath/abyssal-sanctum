@@ -92,10 +92,7 @@ again (the blue "Verification failed" screen).
   UEFI CA". Changing it, like turning Secure Boot off, makes Windows ask for
   the BitLocker recovery key. Have the key first.
 
-Every Sanctum entry in the boot menu works. Memtest86+ is signed too, but
-has not yet been tried with Secure Boot on (it does not start under QEMU's
-Secure Boot firmware even unsigned); if it does not start on your machine,
-turn Secure Boot off for the RAM test.
+Every Sanctum entry in the boot menu works, and so does Memtest86+.
 
 ## Good to know
 

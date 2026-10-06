@@ -435,8 +435,9 @@ and tested in QEMU:
   `update` (3.6 million signatures), `--export` and `--import` (a tampered
   pack is refused), and a scan with the official databases (both EICAR
   copies found; about 1.4 GB of RAM).
-- Still to test on hardware: a real USB data partition, a real Windows
-  disk, BitLocker unlocking.
+- On hardware (2026-10-06, the maintainer's UEFI test machine, Secure Boot
+  on): `targets`, `mount`, `scan`, `umount`, an online `update`, and
+  `data init` on a USB stick all work. Still to test: BitLocker unlocking.
 
 Secure Boot (Phase 9, brought forward): decided in
 [ADR-0011](docs/architecture/decisions/0011-secure-boot-shim-mok.md)

@@ -55,6 +55,9 @@ The options are compared in the
 
 Done in QEMU (OVMF with Microsoft's keys): the boot chain, enrolment,
 removal and reproducible signing (research report, prototype results).
+Done on hardware (2026-10-06, one UEFI machine without BitLocker, real
+release key): enrolment, boot with Secure Boot on, Memtest86+. Still
+needed: the BitLocker machine.
 
 ## Consequences
 
